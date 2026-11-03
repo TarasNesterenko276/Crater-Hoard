@@ -1,4 +1,6 @@
 xcuserdata/
 DerivedData/
 *.xcresult
+*.xcresult/
+_shots_*/
 .DS_Store

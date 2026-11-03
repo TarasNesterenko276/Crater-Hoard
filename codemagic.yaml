@@ -1,0 +1,35 @@
+workflows:
+  ios-app-store:
+    name: Crater Hoard — App Store preparation
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: craterhoard
+    environment:
+      xcode: 27.1
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.craterhoard.game41
+      vars:
+        XCODE_PROJECT: CraterHoard.xcodeproj
+        XCODE_SCHEME: CraterHoard
+        APP_STORE_APP_ID: "6830249258"
+    scripts:
+      - name: Configure App Store signing
+        script: |
+          xcode-project use-profiles
+      - name: Set unique build number
+        script: |
+          agvtool new-version -all "$((PROJECT_BUILD_NUMBER + 1))"
+      - name: Archive and export IPA
+        script: |
+          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" --config Release
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false
