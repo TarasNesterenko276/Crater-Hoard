@@ -6,17 +6,24 @@ workflows:
     integrations:
       app_store_connect: craterhoard
     environment:
+      groups:
+        - craterhoard_asc
       xcode: 27.1
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.craterhoard.game41
       vars:
         XCODE_PROJECT: CraterHoard.xcodeproj
         XCODE_SCHEME: CraterHoard
+        BUNDLE_ID: com.craterhoard.game41
         APP_STORE_APP_ID: "6830249258"
     scripts:
-      - name: Configure App Store signing
+      - name: Set up code signing
         script: |
+          set -euo pipefail
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
+            --create
+          keychain add-certificates
           xcode-project use-profiles
       - name: Set unique build number
         script: |
