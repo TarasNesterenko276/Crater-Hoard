@@ -107,10 +107,10 @@ final class CraterHoardUITests: CraterHoardUITestCase {
     func testBrewingAnUpgradeSpendsGold() {
         launch()
         openPanel("vault.assay", expecting: "assay.screen")
-        let level = element("assay.level.bellows")
+        let level = element("assay.level.wheels")
         XCTAssertTrue(level.label.hasPrefix("Lv 0"))
-        element("assay.buy.bellows").tap()
-        waitForToast(prefix: "Bellows brewed")
+        element("assay.buy.wheels").tap()
+        waitForToast(prefix: "Greased Wheels brewed")
         XCTAssertTrue(level.label.hasPrefix("Lv 1"))
         closeDrawer()
         XCTAssertEqual(digits(element("vault.gold")), 1_000 - 60)
@@ -120,15 +120,15 @@ final class CraterHoardUITests: CraterHoardUITestCase {
     func testBrewingIsRefusedWithoutGold() {
         launch(["--broke"])
         openPanel("vault.assay", expecting: "assay.screen")
-        element("assay.buy.lavaSink").tap()
+        element("assay.buy.ironPlating").tap()
         waitForToast(prefix: "You need")
-        XCTAssertTrue(element("assay.level.lavaSink").label.hasPrefix("Lv 0"))
+        XCTAssertTrue(element("assay.level.ironPlating").label.hasPrefix("Lv 0"))
     }
 
     // MARK: - Lantern row
 
     @MainActor
-    func testHiringAKeeperSendsThemToTheClaw() {
+    func testHiringAKeeperPutsThemInTheCart() {
         launch()
         openPanel("vault.lanterns", expecting: "lanterns.screen")
         element("lanterns.keeper.cinder").tap()
@@ -166,7 +166,7 @@ final class CraterHoardUITests: CraterHoardUITestCase {
         launch(["--history"])
         openPanel("vault.core", expecting: "core.screen")
         XCTAssertFalse(element("core.empty").exists)
-        XCTAssertTrue(element("core.bestHeight").label.contains("1.7 m"))
+        XCTAssertTrue(element("core.bestScore").label.filter(\.isNumber).hasPrefix("752"), "Best seeded score is 410 + 171 × 2")
     }
 
     // MARK: - Settings
@@ -175,8 +175,8 @@ final class CraterHoardUITests: CraterHoardUITestCase {
     func testResetEmptiesTheVault() {
         launch()
         openPanel("vault.assay", expecting: "assay.screen")
-        element("assay.buy.bellows").tap()
-        waitForToast(prefix: "Bellows brewed")
+        element("assay.buy.wheels").tap()
+        waitForToast(prefix: "Greased Wheels brewed")
         closeDrawer()
         openPanel("vault.settings", expecting: "settings.screen")
         element("settings.reset").tap()
@@ -228,8 +228,9 @@ final class CraterHoardUITests: CraterHoardUITestCase {
         startShift()
         let pause = element("game.pause")
         XCTAssertTrue(waitForHittable(pause), "Pause never became tappable")
-        XCTAssertTrue(element("hud.lava").exists)
-        XCTAssertTrue(element("hud.dial").exists)
+        for id in ["hud.planks", "hud.gold", "hud.heat", "hud.cargo", "hud.ash", "game.dash", "game.switchRail"] {
+            XCTAssertTrue(element(id).exists, "\(id) missing")
+        }
         pause.tap()
         waitFor("game.resume")
         element("game.resume").tap()
@@ -240,6 +241,20 @@ final class CraterHoardUITests: CraterHoardUITestCase {
         element("game.quit").tap()
         waitFor("vault.screen")
         XCTAssertTrue(element("game.screen").waitForNonExistence(timeout: 4))
+    }
+
+    @MainActor
+    func testRailLeverSwitchesRails() {
+        launch()
+        startShift()
+        let lever = element("game.switchRail")
+        XCTAssertTrue(lever.waitForExistence(timeout: 4))
+        XCTAssertEqual(lever.label, "Switch to the upper rail")
+        lever.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let switched = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Switch to the lower rail"), object: lever)
+        XCTAssertEqual(XCTWaiter().wait(for: [switched], timeout: 3), .completed, "Cart did not reach the upper rail")
+        element("game.dash").coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(element("game.screen").exists)
     }
 
     @MainActor
@@ -256,7 +271,7 @@ final class CraterHoardUITests: CraterHoardUITestCase {
         launch(["--autopilot"])
         startShift()
         let slate = element("game.slate")
-        XCTAssertTrue(slate.waitForExistence(timeout: 90), "Shift never ended")
+        XCTAssertTrue(slate.waitForExistence(timeout: 120), "Shift never ended")
         element("game.toVault").tap()
         waitFor("vault.screen")
         XCTAssertGreaterThan(digits(element("vault.gold")) ?? 0, 1_000, "Gold from the shift was not banked")
@@ -280,7 +295,7 @@ final class CraterHoardUITests: CraterHoardUITestCase {
         XCTAssertTrue(element("vault.board").isHittable)
         attach("pad-landscape-vault")
         openPanel("vault.assay", expecting: "assay.screen")
-        XCTAssertTrue(element("assay.buy.bellows").isHittable)
+        XCTAssertTrue(element("assay.buy.wheels").isHittable)
         attach("pad-landscape-assay")
         closeDrawer()
         element("vault.play").tap()

@@ -1,41 +1,57 @@
 import Foundation
 
-/// Tuning constants shared by the rules and the scene.
+/// Tuning constants for a shift on the slope. Positions along a rail are normalised to `-1...1`.
 enum Balance {
-    /// Width of the basalt beam that rests on the fulcrum, in scene points.
-    static let beamWidth: Double = 280
-    static let beamThickness: Double = 20
+    // Cart
+    static let trackLimit: Double = 0.95
+    static let cartHalfWidth: Double = 0.11
+    static let catchRadius: Double = 0.15
+    static let baseCartSpeed: Double = 1.5
+    static let dashSpeedFactor: Double = 2.6
+    static let dashDuration: Double = 0.32
+    static let dashCooldown: Double = 1.1
+    static let hitInvulnerability: Double = 1.0
+    static let basePlanks = 3
 
-    static let ingotWidth: Double = 118
-    static let ingotThickness: Double = 24
+    // Rails
+    static let baseSwitchTime: Double = 0.5
+    /// The lower rail banks at its left end, the upper rail at its right end.
+    static let bankZone: Double = 0.86
 
-    /// Base seconds a fresh coin needs to cool completely in the claw.
-    static let baseCoolDuration: Double = 3.4
-    /// The claw cools coins faster as the hoard grows, down to this floor.
-    static let minimumCoolDuration: Double = 2.0
-    static let coolSpeedupPerCoin: Double = 0.025
-    /// Delay between releasing a coin and the claw bringing the next one.
-    static let reloadDelay: Double = 0.55
+    // Heat
+    static let baseHeatCapacity: Double = 100
+    static let carryHeatPerCoin: Double = 0.55
+    static let upperRailHeatFactor: Double = 1.3
+    static let coolingPerSecond: Double = 9
+    static let heatAfterOverheat: Double = 0.4
 
-    /// Base fraction of the cooling time during which a coin is hot enough to weld.
-    static let baseWeldFraction: Double = 0.30
+    // Cargo
+    static let cargoStep: Double = 0.08
+    static let cargoMultiplierCap: Double = 2.0
+    static let lightningCharge: Double = 0.5
+    static let lightningChargeCap: Double = 1.5
+    static let upperRailValueFactor: Double = 1.6
 
-    /// The beam can never tilt further than this (radians, about 18 degrees).
-    static let maxTilt: Double = 0.32
-    /// Load moment (weight × points) the beam absorbs per radian of tilt before upgrades.
-    static let baseRestoringMoment: Double = 950
+    // Volleys
+    static let warningDuration: Double = 1.0
+    static let firstVolleyDelay: Double = 1.2
+    static let baseVolleyInterval: Double = 3.2
+    static let minimumVolleyInterval: Double = 1.7
+    static let baseFlightTime: Double = 1.6
+    static let minimumFlightTime: Double = 1.05
 
-    static let baseLavaNotches = 4
-    static let steadyStep: Double = 0.25
-    static let baseMultiplierCap: Double = 2.0
-    static let baseSteadyDegrees: Double = 4.0
+    // Crust
+    static let boulderHalfWidth: Double = 0.06
+    static let boulderLifetime: Double = 30
+    static let boulderShardGold = 12
 
-    /// Share of the three coins' value paid on top when they mint into an ingot.
-    static let baseMintBonus: Double = 0.5
-
-    /// Scene points per centimetre of hoard height shown to the player (1 pt = 0.5 cm).
-    static let centimetresPerPoint: Double = 0.5
-
-    /// Chance that the next coin repeats the previous metal ("a vein").
-    static let veinChance: Double = 0.38
+    // Ash cloud
+    static let ashPerProjectile: Double = 0.022
+    static let ashPerBomb: Double = 0.035
+    static let ashClearingPerSecond: Double = 0.022
+    static let lightningThreshold: Double = 0.55
+    static let lightningInterval: Double = 2.4
+    static let lightningWarning: Double = 0.85
+    static let lightningRadius: Double = 0.17
+    static let lightningGold = 10
 }

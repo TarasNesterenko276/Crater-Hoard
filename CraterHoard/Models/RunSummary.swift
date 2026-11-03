@@ -4,13 +4,14 @@ import Foundation
 struct RunSummary: Equatable, Sendable {
     var score: Int
     var gold: Int
-    var heightCentimetres: Int
-    var coinsLanded: Int
-    var mints: Int
-    var welds: Int
-    var spills: Int
-    var bestMultiplier: Double
     var duration: TimeInterval
+    var coinsCaught: Int
+    var coresCaught: Int
+    var banks: Int
+    var bestBank: Int
+    var bouldersBroken: Int
+    var lightningCaught: Int
+    var volleys: Int
     var keeperID: String
 }
 
@@ -18,8 +19,8 @@ struct RunSummary: Equatable, Sendable {
 struct RunOutcome: Equatable, Sendable {
     let summary: RunSummary
     let previousBestScore: Int
-    let previousBestHeight: Int
+    let previousBestBank: Int
     let isNewBestScore: Bool
-    let isNewBestHeight: Bool
+    let isNewBestBank: Bool
     let totalGold: Int
 }

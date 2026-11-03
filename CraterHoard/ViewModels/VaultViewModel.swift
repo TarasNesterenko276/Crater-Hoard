@@ -17,7 +17,7 @@ final class VaultViewModel {
 
     var gold: Int { profileStore.gold }
     var keeper: Keeper { profileStore.loadout.keeper }
-    var bestHeight: Int { profileStore.profile.bestHeight }
+    var bestBank: Int { profileStore.profile.bestBank }
     var bestScore: Int { profileStore.profile.bestScore }
     var hasPlayed: Bool { profileStore.profile.totalRuns > 0 }
     var needsGuide: Bool { !settings.hasSeenGuide }

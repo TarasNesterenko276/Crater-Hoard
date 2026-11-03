@@ -18,7 +18,7 @@ enum ProfileError: LocalizedError, Equatable {
         case .keeperAlreadyHired:
             "This keeper already works for you."
         case .keeperNotHired:
-            "Hire this keeper before sending them to the claw."
+            "Hire this keeper before sending them to the cart."
         }
     }
 }
@@ -105,20 +105,21 @@ final class ProfileStore {
     @discardableResult
     func recordRun(_ summary: RunSummary) -> RunOutcome {
         let previousBestScore = profile.bestScore
-        let previousBestHeight = profile.bestHeight
+        let previousBestBank = profile.bestBank
         let isNewBestScore = summary.score > previousBestScore
-        let isNewBestHeight = summary.heightCentimetres > previousBestHeight
+        let isNewBestBank = summary.bestBank > previousBestBank
 
         profile.gold += summary.gold
         profile.totalRuns += 1
         profile.totalGoldEarned += summary.gold
-        profile.totalCoinsLanded += summary.coinsLanded
-        profile.totalMints += summary.mints
-        profile.totalWelds += summary.welds
-        profile.totalSpills += summary.spills
-        profile.bestMultiplier = max(profile.bestMultiplier, summary.bestMultiplier)
+        profile.totalCoinsCaught += summary.coinsCaught
+        profile.totalCores += summary.coresCaught
+        profile.totalBanks += summary.banks
+        profile.totalBouldersBroken += summary.bouldersBroken
+        profile.totalLightning += summary.lightningCaught
+        profile.longestShift = max(profile.longestShift, summary.duration)
         if isNewBestScore { profile.bestScore = summary.score }
-        if isNewBestHeight { profile.bestHeight = summary.heightCentimetres }
+        if isNewBestBank { profile.bestBank = summary.bestBank }
 
         context.insert(RunRecord(summary: summary))
         persistQuietly()
@@ -127,9 +128,9 @@ final class ProfileStore {
         return RunOutcome(
             summary: summary,
             previousBestScore: previousBestScore,
-            previousBestHeight: previousBestHeight,
+            previousBestBank: previousBestBank,
             isNewBestScore: isNewBestScore,
-            isNewBestHeight: isNewBestHeight,
+            isNewBestBank: isNewBestBank,
             totalGold: profile.gold
         )
     }

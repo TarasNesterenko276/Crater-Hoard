@@ -9,7 +9,7 @@ final class LanternsViewModel {
     private let haptics: HapticsService
     private let sound: SoundService
 
-    /// The keeper currently lit up in the row (not necessarily the one at the claw).
+    /// The keeper currently lit up in the row (not necessarily the one in the cart).
     var focused: Keeper
     var toastMessage: String?
     private(set) var toastIsError = false
@@ -24,7 +24,7 @@ final class LanternsViewModel {
     enum Action: Equatable {
         case hire(price: Int)
         case select
-        case atTheClaw
+        case inTheCart
     }
 
     var gold: Int { profileStore.gold }
@@ -33,7 +33,7 @@ final class LanternsViewModel {
     func isHired(_ keeper: Keeper) -> Bool { profileStore.profile.isHired(keeper) }
 
     func action(for keeper: Keeper) -> Action {
-        if keeper == selected { return .atTheClaw }
+        if keeper == selected { return .inTheCart }
         return isHired(keeper) ? .select : .hire(price: keeper.price)
     }
 
@@ -50,13 +50,13 @@ final class LanternsViewModel {
             switch action(for: keeper) {
             case .hire:
                 try profileStore.hireKeeper(keeper)
-                toastMessage = "\(keeper.name) joined the vault and took the claw."
+                toastMessage = "\(keeper.name) joined the vault and took the cart."
                 sound.play(.buy, volume: 0.7)
             case .select:
                 try profileStore.selectKeeper(keeper)
-                toastMessage = "\(keeper.name) is at the claw."
+                toastMessage = "\(keeper.name) is in the cart."
                 sound.play(.tap, volume: 0.6)
-            case .atTheClaw:
+            case .inTheCart:
                 return
             }
             toastIsError = false

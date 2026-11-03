@@ -124,7 +124,7 @@ struct VaultView: View {
 
     private func centerpiece(unit: CGFloat) -> some View {
         VStack(spacing: 8) {
-            ArtImage("hub_balance")
+            ArtImage("hub_cart")
                 .frame(width: unit * 1.15)
             Button {
                 open(.lanterns)
@@ -153,7 +153,7 @@ struct VaultView: View {
             }
             .buttonStyle(PressableStyle())
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Keeper at the claw: \(viewModel.keeper.name), \(viewModel.keeper.perkTitle)")
+            .accessibilityLabel("Keeper in the cart: \(viewModel.keeper.name), \(viewModel.keeper.perkTitle)")
             .accessibilityHint("Opens the lantern row")
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier(AccessibilityID.Vault.keeper)
@@ -167,7 +167,7 @@ struct VaultView: View {
                 .frame(width: unit * 1.45)
                 .overlay {
                     if viewModel.hasPlayed {
-                        Text("Best \(Formatters.height(viewModel.bestHeight))")
+                        Text("Best haul \(Formatters.integer(viewModel.bestBank))")
                             .font(.display(14, relativeTo: .footnote))
                             .foregroundStyle(Theme.Colors.goldLight)
                             .padding(.horizontal, 10)
@@ -179,7 +179,7 @@ struct VaultView: View {
             Button(action: onPlay) {
                 VStack(spacing: 2) {
                     Text("RIDE UP")
-                    Text("Start a shift at the crater")
+                    Text("Start a shift on the slope")
                         .font(.body(13, relativeTo: .caption, bold: true))
                         .tracking(0)
                         .foregroundStyle(Theme.Colors.paper.opacity(0.9))

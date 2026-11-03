@@ -8,7 +8,7 @@ struct GameView: View {
     let onExit: (VaultPanel?) -> Void
 
     @Environment(\.scenePhase) private var scenePhase
-    @State private var spillFlash: Double = 0
+    @State private var hitFlash: Double = 0
 
     init(viewModel: GameViewModel, onExit: @escaping (VaultPanel?) -> Void) {
         self.viewModel = viewModel
@@ -23,20 +23,21 @@ struct GameView: View {
                 SpriteView(scene: scene, isPaused: viewModel.isScenePaused, preferredFramesPerSecond: 60)
                     .id(viewModel.sceneID)
                     .ignoresSafeArea()
-                    .accessibilityLabel("Crater shaft. Drag to move the claw, lift your finger to drop the coin.")
+                    .accessibilityLabel("Volcano slope. Drag to roll the cart, swipe up or down to change rails, tap to dash.")
             }
 
             RadialGradient(colors: [.clear, Theme.Colors.lava.opacity(0.6)], center: .center, startRadius: 140, endRadius: 560)
                 .ignoresSafeArea()
-                .opacity(spillFlash)
+                .opacity(hitFlash)
                 .allowsHitTesting(false)
 
             GameHUDView(
                 hud: viewModel.hud,
-                bestHeight: viewModel.bestHeight,
                 callout: viewModel.callout,
                 isVisible: viewModel.isRunning || viewModel.isScenePaused,
-                onPause: viewModel.pause
+                onPause: viewModel.pause,
+                onSwitch: viewModel.switchRail,
+                onDash: viewModel.dash
             )
 
             overlays
@@ -50,9 +51,9 @@ struct GameView: View {
         .onChange(of: scenePhase) { _, newPhase in
             viewModel.handleScenePhaseChange(newPhase)
         }
-        .onChange(of: viewModel.spillFlashCount) { _, _ in
-            spillFlash = 1
-            withAnimation(.easeOut(duration: 0.7)) { spillFlash = 0 }
+        .onChange(of: viewModel.hitFlashCount) { _, _ in
+            hitFlash = 1
+            withAnimation(.easeOut(duration: 0.7)) { hitFlash = 0 }
         }
     }
 
@@ -63,7 +64,7 @@ struct GameView: View {
             ShiftBriefingOverlay(
                 keeper: viewModel.keeper,
                 loadout: viewModel.loadout,
-                bestHeight: viewModel.bestHeight,
+                bestBank: viewModel.bestBank,
                 bestScore: viewModel.bestScore,
                 onStart: viewModel.beginRun,
                 onLeave: { onExit(nil) }

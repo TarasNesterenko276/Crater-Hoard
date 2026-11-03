@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Keepers glow inside a row of hanging mine lanterns. Tap a lantern to light it,
-/// then hire or send that keeper to the claw.
+/// then hire or send that keeper to the cart.
 struct LanternRowView: View {
     @State private var viewModel: LanternsViewModel
 
@@ -37,7 +37,7 @@ struct LanternRowView: View {
                             keeper: keeper,
                             isHired: viewModel.isHired(keeper),
                             isFocused: keeper == viewModel.focused,
-                            isAtClaw: keeper == viewModel.selected,
+                            isInCart: keeper == viewModel.selected,
                             drop: CGFloat([8, 22, 12, 18, 6, 24][(rowIndex * 3 + index) % 6])
                         ) {
                             withAnimation(.spring(duration: 0.35)) { viewModel.focus(keeper) }
@@ -127,13 +127,13 @@ struct LanternRowView: View {
             .accessibilityIdentifier(AccessibilityID.Lanterns.action)
         case .select:
             Button(action: viewModel.performAction) {
-                Text("Send \(keeper.name) to the claw")
+                Text("Send \(keeper.name) to the cart")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(CopperButtonStyle(tint: Theme.Colors.patinaDark, isProminent: false))
             .accessibilityIdentifier(AccessibilityID.Lanterns.action)
-        case .atTheClaw:
-            Label("\(keeper.name) is at the claw", systemImage: "hand.raised.fill")
+        case .inTheCart:
+            Label("\(keeper.name) is in the cart", systemImage: "hand.raised.fill")
                 .font(.display(16, relativeTo: .headline))
                 .foregroundStyle(Theme.Colors.patinaDark)
                 .frame(maxWidth: .infinity, minHeight: Theme.Metrics.minimumTap)
@@ -147,7 +147,7 @@ private struct LanternButton: View {
     let keeper: Keeper
     let isHired: Bool
     let isFocused: Bool
-    let isAtClaw: Bool
+    let isInCart: Bool
     let drop: CGFloat
     let action: () -> Void
 
@@ -186,8 +186,8 @@ private struct LanternButton: View {
                     .font(.display(14, relativeTo: .caption))
                     .foregroundStyle(isFocused ? Theme.Colors.ink : Theme.Colors.inkSoft)
                     .padding(.top, 2)
-                if isAtClaw {
-                    Text("AT CLAW")
+                if isInCart {
+                    Text("IN CART")
                         .font(.body(10, relativeTo: .caption2, bold: true))
                         .tracking(1)
                         .foregroundStyle(Theme.Colors.paper)
@@ -201,7 +201,7 @@ private struct LanternButton: View {
         .buttonStyle(PressableStyle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(keeper.name)
-        .accessibilityValue(isAtClaw ? "At the claw" : isHired ? "Hired" : "Locked, \(Formatters.integer(keeper.price)) gold")
+        .accessibilityValue(isInCart ? "In the cart" : isHired ? "Hired" : "Locked, \(Formatters.integer(keeper.price)) gold")
         .accessibilityAddTraits(isFocused ? [.isButton, .isSelected] : .isButton)
         .accessibilityIdentifier(AccessibilityID.Lanterns.lantern(keeper))
     }

@@ -37,7 +37,7 @@ enum AccessibilityID {
         static let empty = "core.empty"
         static let stats = "core.stats"
         static let geode = "core.geode"
-        static let bestHeight = "core.bestHeight"
+        static let bestScore = "core.bestScore"
     }
 
     enum Guide {
@@ -69,10 +69,13 @@ enum AccessibilityID {
         static let toVault = "game.toVault"
         static let toAssay = "game.toAssay"
         static let gold = "hud.gold"
-        static let height = "hud.height"
-        static let lava = "hud.lava"
-        static let dial = "hud.dial"
+        static let planks = "hud.planks"
+        static let ash = "hud.ash"
         static let heat = "hud.heat"
+        static let cargo = "hud.cargo"
+        static let callout = "hud.callout"
+        static let dash = "game.dash"
+        static let switchRail = "game.switchRail"
     }
 
     static let toast = "toast"

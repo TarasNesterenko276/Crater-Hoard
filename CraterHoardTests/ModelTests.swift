@@ -18,22 +18,22 @@ struct UpgradeAndKeeperTests {
     }
 
     @Test func effectsDescribeTheLevel() {
-        #expect(UpgradeKind.bellows.effectDescription(atLevel: 0) == "Weld window 30%")
-        #expect(UpgradeKind.bellows.effectDescription(atLevel: 5) == "Weld window 60%")
-        #expect(UpgradeKind.lavaSink.effectDescription(atLevel: 1) == "5 lava notches")
-        #expect(UpgradeKind.assayLens.effectDescription(atLevel: 0) == "Rare coins 22%")
+        #expect(UpgradeKind.wheels.effectDescription(atLevel: 0) == "Speed x1")
+        #expect(UpgradeKind.wheels.effectDescription(atLevel: 5) == "Speed x1.4")
+        #expect(UpgradeKind.ironPlating.effectDescription(atLevel: 1) == "4 planks")
+        #expect(UpgradeKind.waterTank.effectDescription(atLevel: 2) == "Heat tank 140")
+        #expect(UpgradeKind.railSwitch.effectDescription(atLevel: 0) == "Switch 0.5 s")
     }
 
     @Test func everyUpgradeImprovesTheLoadout() {
         var loadout = Loadout.starter
-        loadout.bellows = 3; loadout.counterweight = 3; loadout.lavaSink = 3; loadout.assayLens = 3; loadout.spiritLevel = 3
+        loadout.wheels = 3; loadout.waterTank = 3; loadout.ironPlating = 3; loadout.railSwitch = 3; loadout.sieve = 3
         let base = Loadout.starter
-        #expect(loadout.weldFraction > base.weldFraction)
-        #expect(loadout.restoringFactor > base.restoringFactor)
-        #expect(loadout.lavaNotches > base.lavaNotches)
-        #expect(loadout.rareChance > base.rareChance)
-        #expect(loadout.steadyDegrees > base.steadyDegrees)
-        #expect(loadout.multiplierCap > base.multiplierCap)
+        #expect(loadout.cartSpeed > base.cartSpeed)
+        #expect(loadout.heatCapacity > base.heatCapacity)
+        #expect(loadout.planks > base.planks)
+        #expect(loadout.switchTime < base.switchTime)
+        #expect(loadout.valueFactor > base.valueFactor)
     }
 
     @Test func keepersHaveDistinctPerksAndRisingPrices() {
@@ -43,29 +43,21 @@ struct UpgradeAndKeeperTests {
         #expect(Set(Keeper.allCases.map(\.perkTitle)).count == Keeper.allCases.count)
     }
 
-    @Test func assayLensBringsMoreRareCoins() {
-        func rareShare(_ lens: Int) -> Double {
-            var loadout = Loadout.starter
-            loadout.assayLens = lens
-            var session = RunSession(loadout: loadout, seed: 77)
-            _ = session.start()
-            var rare = 0
-            for _ in 0..<400 {
-                if session.held == nil { _ = session.advance(by: 1) }
-                if let metal = session.held?.metal, metal == .gold || metal == .obsidian { rare += 1 }
-                session.dropAndLand(on: .beam)
-            }
-            return Double(rare) / 400
-        }
-        #expect(rareShare(5) > rareShare(0))
+    @Test func sieveRaisesCoinValue() {
+        var loadout = Loadout.starter
+        loadout.sieve = 5
+        var session = RunSession(loadout: loadout, seed: 1, autoEvents: false)
+        session.start()
+        session.launch([(.coin(.gold), .lower, 0)], flightTime: 0.1)
+        let events = session.run(for: 0.2)
+        #expect(events.contains { if case .caught(_, 21) = $0 { true } else { false } }, "15 × 1.4")
     }
 
-    @Test func pieceKindsUseTheirMetal() {
-        #expect(PieceKind.coin(.gold).width == CoinMetal.gold.width)
-        #expect(PieceKind.ingot(.gold).width == Balance.ingotWidth)
-        #expect(PieceKind.ingot(.silver).weight == CoinMetal.silver.weight * 3)
-        #expect(PieceKind.ingot(.copper).art == "ingot_copper")
-        #expect(CoinMetal.allCases.filter(\.canMint).count == 3)
+    @Test func payloadsHaveValueHeatAndArt() {
+        #expect(Payload.core.value > Payload.coin(.gold).value)
+        #expect(Payload.bomb.value == 0)
+        #expect(Payload.coin(.copper).art == "coin_front_copper")
+        #expect(Rail.lower.other == .upper)
     }
 }
 
@@ -80,13 +72,13 @@ struct AchievementTests {
     }
 
     @Test func progressIsClampedAndUnlocksAtTheTarget() {
-        let stats = PlayerStats(bestHeight: 400, totalRuns: 3, totalMints: 12, bestMultiplier: 2.2, hiredKeeperCount: 2)
+        let stats = PlayerStats(bestBank: 400, totalRuns: 3, totalBouldersBroken: 12, totalLightning: 10, hiredKeeperCount: 2)
         let byID = Dictionary(uniqueKeysWithValues: AchievementCatalog.evaluate(stats).map { ($0.id, $0) })
-        #expect(byID["height250"]?.isUnlocked == true)
-        #expect(byID["height250"]?.progress == 1)
-        #expect(byID["steady"]?.isUnlocked == true)
-        #expect(byID["mints25"]?.isUnlocked == false)
-        #expect(abs((byID["mints25"]?.progress ?? 0) - 0.48) < 0.001)
+        #expect(byID["bank300"]?.isUnlocked == true)
+        #expect(byID["bank300"]?.progress == 1)
+        #expect(byID["lightning10"]?.isUnlocked == true)
+        #expect(byID["boulders25"]?.isUnlocked == false)
+        #expect(abs((byID["boulders25"]?.progress ?? 0) - 0.48) < 0.001)
         #expect(byID["keepers3"]?.art == "crystal_locked")
     }
 }
@@ -129,14 +121,14 @@ struct AssetTests {
     /// actool can silently rename assets; every art name the code uses must resolve.
     @Test func everyArtworkResolves() {
         var names: [String] = [
-            "bg_vault", "bg_shaft", "tex_paper", "tex_slate", "core_rock", "logo_wordmark", "hub_balance",
+            "bg_vault", "bg_sky", "volcano", "terrace", "rail_track", "mine_entrance", "cart", "cart_cargo",
+            "volcanic_core", "lava_bomb", "boulder", "lightning_bolt", "ash_cloud", "plank", "plank_broken",
+            "tex_paper", "tex_slate", "core_rock", "logo_wordmark", "hub_cart",
             "item_shelf", "item_lanterns", "item_core", "item_board", "item_valve", "item_lift", "valve_close",
-            "beam", "fulcrum", "claw", "chain", "lava_crust", "fx_glow", "icon_gold", "plate", "medallion", "plaque",
-            "shelf_plank", "lantern_frame", "tag_perk", "hud_dial", "hud_needle", "hud_thermo", "hud_ruler",
-            "mine_cart", "jar_mask", "crystal_locked"
+            "fx_glow", "icon_gold", "plate", "medallion", "plaque", "shelf_plank", "lantern_frame", "tag_perk",
+            "hud_thermo", "mine_cart", "jar_mask", "crystal_locked"
         ]
-        names += CoinMetal.allCases.map(\.coinArt)
-        names += CoinMetal.allCases.filter(\.canMint).map(\.ingotArt)
+        names += CoinMetal.allCases.map(\.art)
         names += Keeper.allCases.map(\.portraitArt)
         names += UpgradeKind.allCases.map(\.jarArt)
         names += GuidePage.all.map(\.art)

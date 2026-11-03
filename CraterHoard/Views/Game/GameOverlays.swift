@@ -4,7 +4,7 @@ import SwiftUI
 struct ShiftBriefingOverlay: View {
     let keeper: Keeper
     let loadout: Loadout
-    let bestHeight: Int
+    let bestBank: Int
     let bestScore: Int
     let onStart: () -> Void
     let onLeave: () -> Void
@@ -24,7 +24,7 @@ struct ShiftBriefingOverlay: View {
                             .font(.body(12, relativeTo: .caption, bold: true))
                             .tracking(1.4)
                             .foregroundStyle(Theme.Colors.copperDark)
-                        Text("\(keeper.name) at the claw")
+                        Text("\(keeper.name) in the cart")
                             .font(.display(22, relativeTo: .title2))
                             .foregroundStyle(Theme.Colors.ink)
                         Text(keeper.perkTitle + " · " + keeper.perkDetail)
@@ -37,19 +37,24 @@ struct ShiftBriefingOverlay: View {
                 }
 
                 HStack(spacing: 8) {
-                    fact("Weld window", Formatters.percent(loadout.weldFraction))
-                    fact("Lava notches", "\(loadout.lavaNotches)")
-                    fact("Steady zone", "±\(Formatters.oneDecimal(loadout.steadyDegrees))°")
+                    fact("Planks", "\(loadout.planks)")
+                    fact("Heat tank", "\(Int(loadout.heatCapacity))")
+                    fact("Rail switch", "\(Formatters.oneDecimal(loadout.switchTime)) s")
                 }
 
-                if bestHeight > 0 {
-                    Text("Your best: \(Formatters.height(bestHeight)) · \(Formatters.integer(bestScore)) pts")
+                Text("Drag to roll · swipe up/down to change rails · tap to dash")
+                    .font(.body(13, relativeTo: .caption, bold: true))
+                    .foregroundStyle(Theme.Colors.copperDark)
+                    .multilineTextAlignment(.center)
+
+                if bestScore > 0 {
+                    Text("Your best: \(Formatters.integer(bestScore)) pts · best haul \(Formatters.integer(bestBank)) gold")
                         .font(.body(14, bold: true))
                         .foregroundStyle(Theme.Colors.inkSoft)
                 }
 
                 Button(action: onStart) {
-                    Text("LOWER THE CLAW")
+                    Text("ROLL OUT")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(CopperButtonStyle())
@@ -128,7 +133,7 @@ struct PauseOverlay: View {
                 Text("Shift paused")
                     .font(.display(28, relativeTo: .title))
                     .foregroundStyle(Theme.Colors.ink)
-                Text("\(Formatters.height(hud.heightCentimetres)) high · \(Formatters.integer(hud.gold)) gold · lava \(hud.lavaLevel)/\(hud.lavaCapacity)")
+                Text("\(Formatters.integer(hud.gold)) gold banked · \(hud.cargoCount) coins in the cart · \(hud.planks) planks left")
                     .font(.body(15, bold: true))
                     .foregroundStyle(Theme.Colors.inkSoft)
                     .multilineTextAlignment(.center)
@@ -216,18 +221,18 @@ struct ChalkSlateOverlay: View {
                     .monospacedDigit()
                     .accessibilityLabel("Score \(Formatters.integer(summary.score))")
             }
-            Text("The lava reached the beam. \(keeper.name) hauled the hoard down to the vault.")
+            Text("The cart is out of planks. \(keeper.name) pushed it back down to the vault.")
                 .font(.body(14))
                 .foregroundStyle(Theme.Colors.chalk.opacity(0.85))
                 .fixedSize(horizontal: false, vertical: true)
 
             ChalkRule()
-            row("Hoard height", Formatters.height(summary.heightCentimetres), note: outcome.isNewBestHeight ? "best ever" : nil)
             row("Gold banked", "+\(Formatters.integer(summary.gold))", note: "vault: \(Formatters.integer(outcome.totalGold))")
-            tallyRow("Ingots minted", summary.mints)
-            tallyRow("Coins welded", summary.welds)
-            tallyRow("Coins spilled", summary.spills)
-            row("Best steady", Formatters.multiplier(summary.bestMultiplier), note: nil)
+            row("Best haul", Formatters.integer(summary.bestBank), note: outcome.isNewBestBank ? "best ever" : nil)
+            row("Coins caught", Formatters.integer(summary.coinsCaught), note: nil)
+            tallyRow("Volcanic cores", summary.coresCaught)
+            tallyRow("Boulders broken", summary.bouldersBroken)
+            tallyRow("Lightning caught", summary.lightningCaught)
             row("Shift length", Formatters.duration(summary.duration), note: nil)
         }
         .padding(20)

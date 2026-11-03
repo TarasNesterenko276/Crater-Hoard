@@ -10,7 +10,7 @@ final class AppDependencies {
     let haptics: HapticsService
     let sound: SoundService
     let isUITesting: Bool
-    /// The claw plays by itself (UI tests and screenshot tours cannot play in real time).
+    /// The cart plays by itself (UI tests and screenshot tours cannot play in real time).
     let usesAutopilot: Bool
 
     static let uiTestingArgument = "--uitesting"
@@ -56,18 +56,20 @@ final class AppDependencies {
     }
 
     private static func seedHistory(into store: ProfileStore) {
-        let shifts: [(Int, Int, Int, Int)] = [(64, 120, 1, 3), (118, 260, 3, 2), (92, 190, 2, 4), (171, 410, 5, 1), (140, 330, 4, 3)]
-        for (height, gold, mints, spills) in shifts {
+        // (gold, seconds, best bank, boulders)
+        let shifts: [(Int, Double, Int, Int)] = [(120, 64, 48, 1), (260, 118, 96, 3), (190, 92, 70, 2), (410, 171, 154, 5), (330, 140, 120, 4)]
+        for (gold, seconds, bestBank, boulders) in shifts {
             store.recordRun(RunSummary(
-                score: gold + height,
+                score: gold + Int(seconds) * 2,
                 gold: gold,
-                heightCentimetres: height,
-                coinsLanded: gold / 8,
-                mints: mints,
-                welds: mints * 2 + 1,
-                spills: spills,
-                bestMultiplier: 1.75,
-                duration: 95,
+                duration: seconds,
+                coinsCaught: gold / 6,
+                coresCaught: boulders / 2,
+                banks: 4,
+                bestBank: bestBank,
+                bouldersBroken: boulders,
+                lightningCaught: boulders / 2,
+                volleys: Int(seconds / 3),
                 keeperID: Keeper.starter.rawValue
             ))
         }

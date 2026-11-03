@@ -8,12 +8,12 @@ final class CoreSampleViewModel {
     struct Stratum: Identifiable, Equatable {
         let id: Int
         let date: Date
-        let heightCentimetres: Int
         let score: Int
         let gold: Int
-        let mints: Int
+        let duration: TimeInterval
+        let lightning: Int
         let keeper: Keeper
-        /// Relative thickness in `0.15...1` compared with the tallest shift on record.
+        /// Relative thickness in `0.15...1` compared with the best shift on record.
         let thickness: Double
         let isBest: Bool
     }
@@ -37,18 +37,18 @@ final class CoreSampleViewModel {
     /// Most recent shift on top, like the newest layer of rock.
     var strata: [Stratum] {
         let runs = profileStore.recentRuns
-        let tallest = max(1, runs.map(\.heightCentimetres).max() ?? 1)
+        let top = max(1, runs.map(\.score).max() ?? 1)
         let best = profileStore.profile.bestScore
         return runs.enumerated().map { index, run in
             Stratum(
                 id: index,
                 date: run.date,
-                heightCentimetres: run.heightCentimetres,
                 score: run.score,
                 gold: run.gold,
-                mints: run.mints,
+                duration: run.duration,
+                lightning: run.lightningCaught,
                 keeper: run.keeper,
-                thickness: max(0.15, Double(run.heightCentimetres) / Double(tallest)),
+                thickness: max(0.15, Double(run.score) / Double(top)),
                 isBest: run.score == best && best > 0
             )
         }
@@ -57,14 +57,14 @@ final class CoreSampleViewModel {
     var stats: [Stat] {
         let profile = profileStore.profile
         return [
-            Stat(id: "bestHeight", title: "Tallest hoard", value: Formatters.height(profile.bestHeight), art: "hud_ruler"),
             Stat(id: "bestScore", title: "Best score", value: Formatters.integer(profile.bestScore), art: "mine_cart"),
+            Stat(id: "bestBank", title: "Best haul", value: Formatters.integer(profile.bestBank), art: "cart_cargo"),
             Stat(id: "runs", title: "Shifts worked", value: Formatters.integer(profile.totalRuns), art: "item_lift"),
             Stat(id: "gold", title: "Gold earned", value: Formatters.integer(profile.totalGoldEarned), art: "icon_gold"),
-            Stat(id: "mints", title: "Ingots minted", value: Formatters.integer(profile.totalMints), art: "ingot_gold"),
-            Stat(id: "welds", title: "Coins welded", value: Formatters.integer(profile.totalWelds), art: "coin_copper"),
-            Stat(id: "spills", title: "Coins spilled", value: Formatters.integer(profile.totalSpills), art: "lava_crust"),
-            Stat(id: "steady", title: "Best steady", value: Formatters.multiplier(profile.bestMultiplier), art: "hud_dial")
+            Stat(id: "coins", title: "Coins caught", value: Formatters.integer(profile.totalCoinsCaught), art: "coin_front_gold"),
+            Stat(id: "cores", title: "Volcanic cores", value: Formatters.integer(profile.totalCores), art: "volcanic_core"),
+            Stat(id: "boulders", title: "Boulders broken", value: Formatters.integer(profile.totalBouldersBroken), art: "boulder"),
+            Stat(id: "lightning", title: "Lightning caught", value: Formatters.integer(profile.totalLightning), art: "lightning_bolt")
         ]
     }
 

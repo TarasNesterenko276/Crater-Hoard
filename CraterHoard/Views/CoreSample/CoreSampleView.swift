@@ -96,9 +96,9 @@ struct CoreSampleView: View {
                 Image("core_rock")
                     .resizable(resizingMode: .tile)
                     .accessibilityHidden(true)
-                if layer.mints > 0 {
+                if layer.lightning > 0 {
                     HStack(spacing: 3) {
-                        ForEach(0..<min(layer.mints, 4), id: \.self) { _ in
+                        ForEach(0..<min(layer.lightning, 4), id: \.self) { _ in
                             Capsule().fill(Theme.Colors.goldLight).frame(width: 8, height: 4)
                         }
                     }
@@ -112,7 +112,7 @@ struct CoreSampleView: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 6) {
-                    Text(Formatters.height(layer.heightCentimetres))
+                    Text("\(Formatters.integer(layer.score)) pts")
                         .font(.display(17, relativeTo: .headline))
                         .foregroundStyle(Theme.Colors.ink)
                     if layer.isBest {
@@ -124,7 +124,7 @@ struct CoreSampleView: View {
                             .background(Capsule().fill(Theme.Colors.goldLight))
                     }
                 }
-                Text("\(Formatters.integer(layer.score)) pts · \(Formatters.integer(layer.gold)) gold · \(layer.keeper.name)")
+                Text("\(Formatters.integer(layer.gold)) gold · \(Formatters.duration(layer.duration)) · \(layer.keeper.name)")
                     .font(.body(13, relativeTo: .caption))
                     .foregroundStyle(Theme.Colors.inkSoft)
                     .lineLimit(1)
@@ -165,7 +165,7 @@ struct CoreSampleView: View {
                 .padding(8)
                 .background(RoundedRectangle(cornerRadius: 12).fill(Theme.Colors.paperShade.opacity(0.45)))
                 .accessibilityElement(children: .combine)
-                .accessibilityIdentifier(stat.id == "bestHeight" ? AccessibilityID.Core.bestHeight : "core.stat.\(stat.id)")
+                .accessibilityIdentifier(stat.id == "bestScore" ? AccessibilityID.Core.bestScore : "core.stat.\(stat.id)")
             }
         }
         .accessibilityElement(children: .contain)

@@ -21,7 +21,7 @@ struct ValveRoomView: View {
                 )
                 valveToggle(
                     title: "Haptics",
-                    detail: "Feel coins land, weld and spill.",
+                    detail: "Feel catches, bomb hits and lightning.",
                     isOn: $viewModel.hapticsEnabled,
                     id: AccessibilityID.Settings.haptics
                 )

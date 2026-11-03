@@ -4,25 +4,25 @@ import SwiftData
 /// A persisted record of one finished shift, drawn as a layer of the core sample.
 @Model
 final class RunRecord {
-    var date: Date
-    var score: Int
-    var gold: Int
-    var heightCentimetres: Int
-    var mints: Int
-    var welds: Int
-    var spills: Int
-    var duration: TimeInterval
-    var keeperID: String
+    var date: Date = Date.now
+    var score: Int = 0
+    var gold: Int = 0
+    var duration: TimeInterval = 0
+    var coinsCaught: Int = 0
+    var bestBank: Int = 0
+    var bouldersBroken: Int = 0
+    var lightningCaught: Int = 0
+    var keeperID: String = Keeper.starter.rawValue
 
     init(summary: RunSummary, date: Date = .now) {
         self.date = date
         score = summary.score
         gold = summary.gold
-        heightCentimetres = summary.heightCentimetres
-        mints = summary.mints
-        welds = summary.welds
-        spills = summary.spills
         duration = summary.duration
+        coinsCaught = summary.coinsCaught
+        bestBank = summary.bestBank
+        bouldersBroken = summary.bouldersBroken
+        lightningCaught = summary.lightningCaught
         keeperID = summary.keeperID
     }
 

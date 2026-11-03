@@ -4,50 +4,30 @@ import SwiftData
 /// The single persistent player profile: gold, upgrades, keepers and lifetime stats.
 @Model
 final class PlayerProfile {
-    var gold: Int
-    var bestScore: Int
-    var bestHeight: Int
-    var totalRuns: Int
-    var totalGoldEarned: Int
-    var totalCoinsLanded: Int
-    var totalMints: Int
-    var totalWelds: Int
-    var totalSpills: Int
-    var bestMultiplier: Double
+    var gold: Int = 0
+    var bestScore: Int = 0
+    var bestBank: Int = 0
+    var longestShift: Double = 0
+    var totalRuns: Int = 0
+    var totalGoldEarned: Int = 0
+    var totalCoinsCaught: Int = 0
+    var totalCores: Int = 0
+    var totalBanks: Int = 0
+    var totalBouldersBroken: Int = 0
+    var totalLightning: Int = 0
 
-    var bellowsLevel: Int
-    var counterweightLevel: Int
-    var lavaSinkLevel: Int
-    var assayLensLevel: Int
-    var spiritLevelLevel: Int
+    var wheelsLevel: Int = 0
+    var waterTankLevel: Int = 0
+    var ironPlatingLevel: Int = 0
+    var railSwitchLevel: Int = 0
+    var sieveLevel: Int = 0
 
-    var hiredKeeperIDs: [String]
-    var selectedKeeperID: String
-    var createdAt: Date
+    var hiredKeeperIDs: [String] = [Keeper.starter.rawValue]
+    var selectedKeeperID: String = Keeper.starter.rawValue
+    var createdAt: Date = Date.now
 
-    init(
-        gold: Int = 0,
-        hiredKeeperIDs: [String] = [Keeper.starter.rawValue],
-        selectedKeeperID: String = Keeper.starter.rawValue,
-        createdAt: Date = .now
-    ) {
+    init(gold: Int = 0, createdAt: Date = .now) {
         self.gold = gold
-        bestScore = 0
-        bestHeight = 0
-        totalRuns = 0
-        totalGoldEarned = 0
-        totalCoinsLanded = 0
-        totalMints = 0
-        totalWelds = 0
-        totalSpills = 0
-        bestMultiplier = 1
-        bellowsLevel = 0
-        counterweightLevel = 0
-        lavaSinkLevel = 0
-        assayLensLevel = 0
-        spiritLevelLevel = 0
-        self.hiredKeeperIDs = hiredKeeperIDs
-        self.selectedKeeperID = selectedKeeperID
         self.createdAt = createdAt
     }
 
@@ -63,21 +43,21 @@ final class PlayerProfile {
 
     func level(for kind: UpgradeKind) -> Int {
         switch kind {
-        case .bellows: bellowsLevel
-        case .counterweight: counterweightLevel
-        case .lavaSink: lavaSinkLevel
-        case .assayLens: assayLensLevel
-        case .spiritLevel: spiritLevelLevel
+        case .wheels: wheelsLevel
+        case .waterTank: waterTankLevel
+        case .ironPlating: ironPlatingLevel
+        case .railSwitch: railSwitchLevel
+        case .sieve: sieveLevel
         }
     }
 
     func setLevel(_ level: Int, for kind: UpgradeKind) {
         switch kind {
-        case .bellows: bellowsLevel = level
-        case .counterweight: counterweightLevel = level
-        case .lavaSink: lavaSinkLevel = level
-        case .assayLens: assayLensLevel = level
-        case .spiritLevel: spiritLevelLevel = level
+        case .wheels: wheelsLevel = level
+        case .waterTank: waterTankLevel = level
+        case .ironPlating: ironPlatingLevel = level
+        case .railSwitch: railSwitchLevel = level
+        case .sieve: sieveLevel = level
         }
     }
 
@@ -94,13 +74,14 @@ final class PlayerProfile {
     var statsSnapshot: PlayerStats {
         PlayerStats(
             bestScore: bestScore,
-            bestHeight: bestHeight,
+            bestBank: bestBank,
+            longestShift: longestShift,
             totalRuns: totalRuns,
             totalGoldEarned: totalGoldEarned,
-            totalCoinsLanded: totalCoinsLanded,
-            totalMints: totalMints,
-            totalWelds: totalWelds,
-            bestMultiplier: bestMultiplier,
+            totalCoinsCaught: totalCoinsCaught,
+            totalCores: totalCores,
+            totalBouldersBroken: totalBouldersBroken,
+            totalLightning: totalLightning,
             hiredKeeperCount: Keeper.allCases.filter { isHired($0) }.count,
             maxedUpgradeCount: UpgradeKind.allCases.filter { level(for: $0) >= $0.maxLevel }.count
         )

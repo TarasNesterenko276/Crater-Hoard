@@ -1,6 +1,6 @@
 import Foundation
 
-/// The cave creatures who operate the claw. Each one brings a passive perk.
+/// The cave creatures who ride the cart. Each one brings a passive perk.
 enum Keeper: String, CaseIterable, Identifiable, Codable, Sendable {
     case pip
     case cinder
@@ -38,22 +38,22 @@ enum Keeper: String, CaseIterable, Identifiable, Codable, Sendable {
     var perkTitle: String {
         switch self {
         case .pip: "Old Hand"
-        case .cinder: "Warm Grip"
-        case .basalt: "Heavy Feet"
-        case .ash: "Night Watch"
-        case .ember: "Mint Master"
+        case .cinder: "Cool Blood"
+        case .basalt: "Battering Ram"
+        case .ash: "Night Eyes"
+        case .ember: "Storm Chaser"
         case .hermit: "Shell Pocket"
         }
     }
 
     var perkDetail: String {
         switch self {
-        case .pip: "Knows every tunnel. Starts each shift with a x1.25 steady bonus."
-        case .cinder: "Coins stay hot 20% longer in the claw, so welds are easier."
-        case .basalt: "Stands on the beam's short end: the beam tilts 25% less."
-        case .ash: "Spots the lava early: one extra lava notch before the shift ends."
-        case .ember: "Minting an ingot pays 50% more bonus gold."
-        case .hermit: "Spilled coins only cost half their gold."
+        case .pip: "Knows every tunnel: the mine entrances bank from twice as far."
+        case .cinder: "The cart heats up 25% slower while carrying coins."
+        case .basalt: "Breaks obsidian boulders just by rolling into them, no dash needed."
+        case .ash: "Sees through the ash cloud: landing shadows never fade."
+        case .ember: "Lightning caught in the ash cloud pays double."
+        case .hermit: "A lava bomb only knocks half of the cargo out of the cart."
         }
     }
 

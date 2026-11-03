@@ -209,155 +209,7 @@ func coinMetalCols(_ m: String) -> (Col, Col, Col) {
     }
 }
 
-func drawCoinSide(_ m: String, w: CGFloat, t: CGFloat) {
-    beginPt(w + 6, t + 6)
-    let body = rr(R(3, 3, w, t), t * 0.42)
-    let (light, mid, dark) = coinMetalCols(m)
-    linearFill(body, [light, mid, dark], P(0, 3), P(0, 3 + t), [0, 0.45, 1])
-    clipped(body) {
-        if m == "obsidian" {
-            // Glassy facets.
-            fill(poly([P(3 + w * 0.12, 3), P(3 + w * 0.32, 3), P(3 + w * 0.2, 3 + t)]), Col(1, 1, 1, 0.16))
-            fill(poly([P(3 + w * 0.55, 3), P(3 + w * 0.62, 3), P(3 + w * 0.5, 3 + t), P(3 + w * 0.44, 3 + t)]), Col(1, 1, 1, 0.1))
-            fill(R(3, 3 + t * 0.15, w, t * 0.12), C.obsidianShine.alpha(0.45))
-        } else {
-            // Milled edge.
-            var x: CGFloat = 3 + t * 0.4
-            while x < 3 + w - t * 0.4 {
-                line(P(x, 3 + t * 0.35), P(x, 3 + t * 0.92), dark.alpha(0.55), 0.9)
-                x += 3.4
-            }
-            fill(R(3, 3 + t * 0.08, w, t * 0.2), light.alpha(0.75))
-        }
-    }
-    stroke(body, C.outline, ow)
-    finish("coin_\(m)")
-}
-
-func drawIngot(_ m: String) {
-    let w: CGFloat = 118, t: CGFloat = 24
-    beginPt(w + 6, t + 6)
-    let inset: CGFloat = 9
-    let shape = CGMutablePath()
-    shape.move(to: P(3 + inset, 3)); shape.addLine(to: P(3 + w - inset, 3))
-    shape.addLine(to: P(3 + w, 3 + t)); shape.addLine(to: P(3, 3 + t)); shape.closeSubpath()
-    let (light, mid, dark) = coinMetalCols(m)
-    linearFill(shape, [light, mid, dark], P(0, 3), P(0, 3 + t), [0, 0.5, 1])
-    clipped(shape) {
-        fill(poly([P(3 + inset, 3), P(3 + w - inset, 3), P(3 + w - inset - 3, 3 + 5), P(3 + inset + 3, 3 + 5)]), light.lighter(0.4).alpha(0.8))
-        // Stamped crater mark.
-        let cx = 3 + w / 2, cy = 3 + t * 0.6
-        let mark = poly([P(cx - 10, cy + 5), P(cx - 4, cy - 4), P(cx - 1.5, cy - 1), P(cx + 1.5, cy - 1), P(cx + 4, cy - 4), P(cx + 10, cy + 5)])
-        fill(mark, dark.alpha(0.55))
-        stroke(mark, light.alpha(0.7), 0.6)
-    }
-    stroke(shape, C.outline, ow)
-    finish("ingot_\(m)")
-}
-
 // MARK: - Scene parts
-
-func drawBeam() {
-    let w: CGFloat = 280, h: CGFloat = 34
-    beginPt(w, h)
-    let slab = rr(R(2, 7, w - 4, 20), 5)
-    linearFill(slab, [C.rockLight, C.rockMid, C.rock], P(0, 7), P(0, 27))
-    clipped(slab) {
-        var g = Rng(s: 41)
-        for _ in 0..<40 { fill(circle(P(g.r(4, w - 4), g.r(9, 26)), g.r(0.5, 1.6)), Col(0, 0, 0, 0.18)) }
-        fill(R(2, 8, w - 4, 3), Col(1, 1, 1, 0.12))
-    }
-    stroke(slab, C.outline, ow)
-    for x in [CGFloat(14), w / 2, w - 14] {
-        let band = rr(R(x - 8, 4, 16, 26), 3)
-        outlinedGradient(band, [C.copperLight, C.copper, C.copperDark], P(0, 4), P(0, 30))
-        rivet(P(x, 10)); rivet(P(x, 24))
-    }
-    finish("beam")
-}
-
-func drawFulcrum() {
-    beginPt(150, 160)
-    let shape = poly([P(75, 6), P(96, 40), P(118, 92), P(146, 156), P(4, 156), P(30, 96), P(54, 40)])
-    softShadow(shape, dy: 2, blur: 8, alpha: 0.5)
-    // Lighter basalt with a warm rim so the rock reads against the dark shaft.
-    linearFill(shape, [C.rockLight.lighter(0.25), C.rockLight, C.rockMid, C.rock], P(40, 0), P(110, 160))
-    clipped(shape) {
-        var g = Rng(s: 7)
-        for _ in 0..<9 {
-            let x = g.r(20, 130), y = g.r(40, 150)
-            line(P(x, y), P(x + g.r(-14, 14), y + g.r(6, 18)), Col(0, 0, 0, 0.35), 1.2)
-        }
-        // Lava glow from below.
-        fill(R(0, 120, 150, 40), C.lava.alpha(0.18))
-    }
-    stroke(shape, C.lava.alpha(0.55), 5)
-    stroke(shape, C.outline, ow)
-    // Copper pin.
-    outlinedGradient(circle(P(75, 12), 9), [C.copperLight, C.copper, C.copperDark], P(66, 4), P(84, 22))
-    fill(circle(P(75, 12), 3), C.copperDark)
-    finish("fulcrum")
-}
-
-func drawClaw() {
-    beginPt(96, 64)
-    // Prongs.
-    for side in [CGFloat(-1), 1] {
-        let p = CGMutablePath()
-        p.move(to: P(48 + side * 12, 20))
-        p.addCurve(to: P(48 + side * 40, 58), control1: P(48 + side * 38, 22), control2: P(48 + side * 44, 44))
-        p.addLine(to: P(48 + side * 33, 60))
-        p.addCurve(to: P(48 + side * 9, 28), control1: P(48 + side * 34, 44), control2: P(48 + side * 28, 30))
-        p.closeSubpath()
-        outlinedGradient(p, [C.ironLight, C.iron], P(0, 20), P(0, 60))
-    }
-    let housing = rr(R(26, 6, 44, 22), 6)
-    outlinedGradient(housing, [C.copperLight, C.copper, C.copperDark], P(0, 6), P(0, 28))
-    fill(R(30, 9, 36, 3), C.patinaLight.alpha(0.6))
-    rivet(P(33, 20)); rivet(P(63, 20))
-    outlined(circle(P(48, 6), 5), C.ironLight)
-    finish("claw")
-}
-
-func drawChain() {
-    beginPt(18, 900)
-    var y: CGFloat = 0
-    var i = 0
-    while y < 900 {
-        if i % 2 == 0 {
-            let link = rr(R(4, y, 10, 22), 5)
-            stroke(link, C.outline, 4.2); stroke(link, C.ironLight, 2.2)
-        } else {
-            line(P(9, y - 2), P(9, y + 24), C.outline, 4.2); line(P(9, y - 2), P(9, y + 24), C.iron, 2.2)
-        }
-        y += 18; i += 1
-    }
-    finish("chain")
-}
-
-func drawLavaCrust() {
-    beginPt(1200, 60)
-    let p = CGMutablePath()
-    p.move(to: P(0, 60)); p.addLine(to: P(0, 16))
-    var x: CGFloat = 0
-    var g = Rng(s: 99)
-    while x < 1200 {
-        let nx = x + g.r(30, 60)
-        p.addQuadCurve(to: P(nx, g.r(10, 20)), control: P((x + nx) / 2, g.r(2, 10)))
-        x = nx
-    }
-    p.addLine(to: P(1200, 60)); p.closeSubpath()
-    linearFill(p, [C.lavaHot, C.lava, C.lavaDeep.mix(C.lava, 0.6)], P(0, 6), P(0, 60), [0, 0.3, 1])
-    clipped(p) {
-        var g2 = Rng(s: 5)
-        for _ in 0..<70 {
-            let c = P(g2.r(0, 1200), g2.r(24, 58))
-            fill(rockShape(R(c.x, c.y, g2.r(10, 34), g2.r(5, 10)), seed: UInt64(c.x * 10)), C.lavaDeep.mix(C.basalt, 0.4).alpha(0.7))
-        }
-        for _ in 0..<40 { glow(P(g2.r(0, 1200), g2.r(16, 30)), g2.r(4, 10), C.lavaHot.alpha(0.8)) }
-    }
-    finish("lava_crust")
-}
 
 func drawGlow() {
     begin(128, 128)
@@ -387,54 +239,6 @@ func rockWall(_ rect: CGRect, seed: UInt64, base: Col, layers: Int = 18) {
     for _ in 0..<Int(rect.width * rect.height / 900) {
         fill(circle(P(g.r(rect.minX, rect.maxX), g.r(rect.minY, rect.maxY)), g.r(0.4, 1.4)), Col(0, 0, 0, g.r(0.1, 0.3)))
     }
-}
-
-func drawShaft() {
-    let w: CGFloat = 430, h: CGFloat = 932
-    beginPt(w, h)
-    // Deep shaft with crater light above and lava light below.
-    linearFill(CGPath(rect: R(0, 0, w, h), transform: nil),
-               [Col(hex: 0x3A2A3E), Col(hex: 0x241B24), Col(hex: 0x17121A), Col(hex: 0x2A1612), Col(hex: 0x4A1E10)],
-               P(0, 0), P(0, h), [0, 0.22, 0.55, 0.82, 1])
-    // Crater mouth with dusk sky and smoke.
-    let mouth = CGMutablePath()
-    mouth.move(to: P(90, 0)); mouth.addQuadCurve(to: P(340, 0), control: P(215, 170))
-    clipped(mouth) {
-        linearFill(CGPath(rect: R(0, 0, w, 120), transform: nil), [Col(hex: 0x2B3A5E), Col(hex: 0x7A4A66), Col(hex: 0xE08A52)], P(0, 0), P(0, 110))
-        var g = Rng(s: 3)
-        for _ in 0..<16 { fill(circle(P(g.r(110, 320), g.r(0, 60)), g.r(10, 26)), Col(hex: 0x3B2C3A, 0.35)) }
-        for _ in 0..<12 { fill(circle(P(g.r(110, 320), g.r(2, 40)), 0.8), Col(1, 1, 1, 0.8)) }
-    }
-    glow(P(215, 40), 220, Col(hex: 0xE08A52, 0.28))
-    // Side walls.
-    for (side, seed) in [(CGFloat(0), UInt64(11)), (1, 12)] {
-        let wall = CGMutablePath()
-        var g = Rng(s: seed)
-        let edge: (CGFloat) -> CGFloat = { y in side == 0 ? 52 + sin(y / 70) * 12 : w - 52 - cos(y / 64) * 12 }
-        wall.move(to: P(side == 0 ? 0 : w, 0))
-        var y: CGFloat = 0
-        while y <= h {
-            wall.addLine(to: P(edge(y) + g.r(-6, 6), y)); y += 24
-        }
-        wall.addLine(to: P(side == 0 ? 0 : w, h)); wall.closeSubpath()
-        clipped(wall) { rockWall(R(0, 0, w, h), seed: seed * 3, base: C.rock, layers: 30) }
-        stroke(wall, C.outline.alpha(0.8), 2)
-        // Rim light from the lava.
-        clipped(wall) { linearFill(CGPath(rect: R(0, h * 0.7, w, h * 0.3), transform: nil), [C.lava.alpha(0), C.lava.alpha(0.35)], P(0, h * 0.7), P(0, h)) }
-    }
-    // Copper pipes and old ladder bolts on the walls.
-    for x in [CGFloat(22), w - 22] {
-        let pipe = rr(R(x - 5, 140, 10, 700), 5)
-        outlinedGradient(pipe, [C.copperDark, C.copperLight, C.copper, C.copperDark], P(x - 5, 0), P(x + 5, 0))
-        for y in stride(from: CGFloat(190), to: 820, by: 130) {
-            outlined(rr(R(x - 8, y, 16, 8), 2), C.patina)
-        }
-    }
-    // Floating embers.
-    var g = Rng(s: 77)
-    for _ in 0..<40 { glow(P(g.r(60, w - 60), g.r(h * 0.35, h)), g.r(2, 5), C.lavaHot.alpha(0.9)) }
-    glow(P(w / 2, h + 40), 340, C.lava.alpha(0.45))
-    finish("bg_shaft")
 }
 
 func drawVault() {
@@ -555,37 +359,6 @@ func coinStackFront(_ cx: CGFloat, _ baseY: CGFloat, count: Int, w: CGFloat, met
         let top = ellipse(R(cx - w / 2, y - 6, w, 7))
         fill(top, light); stroke(top, C.outline, 1)
     }
-}
-
-func drawHubBalance() {
-    beginPt(200, 180)
-    glow(P(100, 90), 110, Col(hex: 0xFFB45A, 0.35))
-    // Fulcrum rock.
-    let rock = poly([P(100, 98), P(128, 172), P(72, 172)])
-    outlinedGradient(rock, [C.rockLight, C.rock], P(80, 100), P(120, 172))
-    // Beam tilted a little.
-    ctx.saveGState(); ctx.translateBy(x: 100, y: 100); ctx.rotate(by: -0.06)
-    let beamPath = rr(R(-88, -6, 176, 12), 4)
-    outlinedGradient(beamPath, [C.rockLight, C.rockMid], P(0, -6), P(0, 6))
-    for x in [CGFloat(-80), 0, 80] { outlined(rr(R(x - 5, -8, 10, 16), 2), C.copper, width: 1.2) }
-    // Hoard: side-view coins and an ingot.
-    let pieces: [(CGFloat, CGFloat, CGFloat, String)] = [(-46, 34, 9, "copper"), (-48, 30, 8, "copper"), (-44, 26, 8, "silver"), (20, 40, 9, "gold"), (18, 36, 8, "copper"), (22, 30, 8, "silver"), (16, 26, 8, "gold")]
-    var y: CGFloat = -6
-    var lastX: CGFloat = 999
-    for (x, w, t, m) in pieces {
-        if x != lastX && abs(x - lastX) > 20 { y = -6 }
-        lastX = x
-        y -= t
-        let (l, mi, d) = coinMetalCols(m)
-        let c = rr(R(x - w / 2, y, w, t), t * 0.4)
-        linearFill(c, [l, mi, d], P(0, y), P(0, y + t)); stroke(c, C.outline, 1.1)
-    }
-    let ingot = poly([P(-26, -74), P(26, -74), P(32, -60), P(-32, -60)])
-    outlinedGradient(ingot, [C.goldLight, C.gold, C.goldDark], P(0, -74), P(0, -60))
-    ctx.restoreGState()
-    var g = Rng(s: 4)
-    for _ in 0..<10 { glow(P(g.r(30, 170), g.r(10, 80)), g.r(2, 4), C.goldLight) }
-    finish("hub_balance")
 }
 
 func drawJarGlass(_ rect: CGRect) -> CGPath {
@@ -874,68 +647,6 @@ func drawKeepers() {
 
 func jarRect() -> CGRect { R(14, 22, 92, 120) }
 
-func drawJars() {
-    // Mask of the interior that the SwiftUI melt fill is clipped to.
-    beginPt(120, 150)
-    fill(drawJarGlass(jarRect().insetBy(dx: 4, dy: 4)), Col(1, 1, 1))
-    finish("jar_mask")
-
-    let objects: [String: () -> Void] = [
-        "bellows": {
-            let b = poly([P(40, 74), P(80, 74), P(72, 112), P(48, 112)])
-            outlinedGradient(b, [C.woodLight, C.woodDark], P(0, 74), P(0, 112))
-            for y in [CGFloat(84), 94, 104] { line(P(46, y), P(74, y), C.woodDark, 1.2) }
-            outlined(rr(R(56, 112, 8, 14), 2), C.copper, width: 1.2)
-            outlined(rr(R(52, 62, 16, 14), 3), C.copper, width: 1.2)
-        },
-        "counterweight": {
-            let w = poly([P(44, 88), P(76, 88), P(86, 124), P(34, 124)])
-            outlinedGradient(w, [C.ironLight, C.iron], P(0, 88), P(0, 124))
-            stroke(circle(P(60, 80), 9), C.outline, 4.4); stroke(circle(P(60, 80), 9), C.ironLight, 2.4)
-            label("5", P(60, 108), size: 14, color: C.cream)
-        },
-        "lavaSink": {
-            for i in 0..<3 {
-                let r = 26 - CGFloat(i) * 8
-                stroke(ellipse(R(60 - r, 100 - r * 0.45, r * 2, r * 0.9)), [C.lavaHot, C.lava, C.lavaDeep][i], 3)
-            }
-            fill(ellipse(R(54, 97, 12, 6)), C.outline)
-        },
-        "assayLens": {
-            stroke(circle(P(56, 92), 18), C.outline, 7); stroke(circle(P(56, 92), 18), C.copper, 4.4)
-            fill(circle(P(56, 92), 15.5), C.patinaLight.alpha(0.45))
-            fill(circle(P(50, 86), 5), Col(1, 1, 1, 0.7))
-            line(P(69, 105), P(84, 122), C.outline, 8); line(P(69, 105), P(84, 122), C.woodLight, 5)
-        },
-        "spiritLevel": {
-            let bar = rr(R(30, 92, 60, 20), 6)
-            outlinedGradient(bar, [C.copperLight, C.copperDark], P(0, 92), P(0, 112))
-            let vial = rr(R(40, 97, 40, 10), 5)
-            fill(vial, C.patinaLight); stroke(vial, C.outline, 1.2)
-            fill(ellipse(R(55, 98, 10, 6)), C.cream)
-            line(P(52, 97), P(52, 107), C.outline, 1); line(P(68, 97), P(68, 107), C.outline, 1)
-        }
-    ]
-    for (name, draw) in objects {
-        beginPt(120, 150)
-        let glass = drawJarGlass(jarRect())
-        softShadow(glass, dy: 3, blur: 5, alpha: 0.3)
-        ctx.setBlendMode(.clear); fill(glass, Col(0, 0, 0, 1)); ctx.setBlendMode(.normal)
-        fill(glass, Col(hex: 0xBFE8E0, 0.12))
-        draw()
-        // Glass highlights and outline.
-        line(P(24, 76), P(24, 128), Col(1, 1, 1, 0.55), 3)
-        line(P(30, 60), P(36, 52), Col(1, 1, 1, 0.45), 2)
-        stroke(glass, C.outline, 2)
-        stroke(drawJarGlass(jarRect().insetBy(dx: 2, dy: 2)), Col(1, 1, 1, 0.25), 1)
-        // Cork and label.
-        let cork = rr(R(42, 12, 36, 16), 4)
-        outlinedGradient(cork, [Col(hex: 0xC99A66), Col(hex: 0x8A6038)], P(0, 12), P(0, 28))
-        line(P(44, 18), P(76, 18), Col(hex: 0x6A4426, 0.6), 1)
-        finish("jar_\(name)")
-    }
-}
-
 // MARK: - Icons, HUD and UI kit
 
 func drawGoldIcon() {
@@ -1013,27 +724,6 @@ func drawTag() {
     finish("tag_perk")
 }
 
-func drawDial() {
-    beginPt(120, 70)
-    let c = P(60, 64)
-    let bezel = CGMutablePath(); bezel.addArc(center: c, radius: 58, startAngle: .pi, endAngle: 0, clockwise: false); bezel.closeSubpath()
-    outlinedGradient(bezel, [C.copperLight, C.copper, C.copperDark], P(0, 6), P(0, 64), width: 1.8)
-    let face = CGMutablePath(); face.addArc(center: c, radius: 50, startAngle: .pi, endAngle: 0, clockwise: false); face.closeSubpath()
-    linearFill(face, [C.cream, C.paper], P(0, 14), P(0, 64)); stroke(face, C.copperDark, 1)
-    for i in 0...12 {
-        let a = .pi + CGFloat(i) / 12 * .pi
-        let r0: CGFloat = i % 3 == 0 ? 38 : 43
-        line(P(c.x + cos(a) * r0, c.y + sin(a) * r0), P(c.x + cos(a) * 48, c.y + sin(a) * 48), C.inkLine, i % 3 == 0 ? 1.6 : 1)
-    }
-    outlined(rr(R(4, 60, 112, 8), 3), C.copperDark, width: 1.2)
-    finish("hud_dial")
-    beginPt(10, 60)
-    let needle = poly([P(5, 2), P(8, 50), P(5, 58), P(2, 50)])
-    outlined(needle, C.lava, width: 1)
-    outlined(circle(P(5, 52), 4), C.copperDark, width: 1)
-    finish("hud_needle")
-}
-
 func drawThermo() {
     beginPt(40, 200)
     let tube = rr(R(12, 8, 16, 170), 8)
@@ -1045,17 +735,6 @@ func drawThermo() {
     outlinedGradient(rr(R(8, 2, 24, 10), 4), [C.copperLight, C.copperDark], P(0, 2), P(0, 12), width: 1.4)
     line(P(16, 14), P(16, 168), Col(1, 1, 1, 0.35), 1.4)
     finish("hud_thermo")
-}
-
-func drawRuler() {
-    beginPt(30, 200)
-    let r = rr(R(4, 2, 22, 196), 5)
-    outlinedGradient(r, [C.rockLight, C.rockMid, C.rock], P(4, 0), P(26, 0))
-    for i in 0..<20 {
-        let y = 8 + CGFloat(i) * 9.6
-        line(P(i % 5 == 0 ? 8 : 15, y), P(24, y), C.outline.alpha(0.8), i % 5 == 0 ? 1.6 : 1)
-    }
-    finish("hud_ruler")
 }
 
 func drawMineCart() {
@@ -1110,124 +789,412 @@ func drawCrystals() {
 
 // MARK: - Guide illustrations
 
+// MARK: - Slope: sky, volcano, terraces, rails, mine entrance
+
+func drawSky() {
+    let w: CGFloat = 430, h: CGFloat = 932
+    beginPt(w, h)
+    linearFill(CGPath(rect: R(0, 0, w, h), transform: nil),
+               [Col(hex: 0x241A33), Col(hex: 0x5A2E45), Col(hex: 0xB0523A), Col(hex: 0x3A2226)], P(0, 0), P(0, h), [0, 0.35, 0.62, 1])
+    var g = Rng(s: 41)
+    for _ in 0..<60 { fill(circle(P(g.r(0, w), g.r(0, h * 0.3)), g.r(0.5, 1.3)), Col(1, 1, 1, g.r(0.3, 0.8))) }
+    // Distant ridges.
+    for (i, col) in [Col(hex: 0x4A2A34), Col(hex: 0x37202A)].enumerated() {
+        let p = CGMutablePath()
+        let base = h * (0.55 + CGFloat(i) * 0.07)
+        p.move(to: P(0, h)); p.addLine(to: P(0, base))
+        var x: CGFloat = 0
+        while x < w { let nx = x + g.r(40, 90); p.addLine(to: P(nx, base - g.r(10, 60))); x = nx }
+        p.addLine(to: P(w, h)); p.closeSubpath()
+        fill(p, col)
+    }
+    finish("bg_sky")
+}
+
+/// The volcano: crater at the top centre of the artwork, slopes spreading to the edges.
+func drawVolcano() {
+    let w: CGFloat = 600, h: CGFloat = 520
+    beginPt(w, h)
+    let cone = CGMutablePath()
+    cone.move(to: P(0, h)); cone.addLine(to: P(0, h * 0.92))
+    cone.addCurve(to: P(w * 0.38, 26), control1: P(w * 0.16, h * 0.62), control2: P(w * 0.3, h * 0.2))
+    cone.addQuadCurve(to: P(w * 0.62, 26), control: P(w * 0.5, 44))
+    cone.addCurve(to: P(w, h * 0.92), control1: P(w * 0.7, h * 0.2), control2: P(w * 0.84, h * 0.62))
+    cone.addLine(to: P(w, h)); cone.closeSubpath()
+    softShadow(cone, dy: 0, blur: 14, alpha: 0.5)
+    linearFill(cone, [C.rockLight, C.rockMid, C.rock, C.basalt], P(w * 0.3, 0), P(w * 0.7, h), [0, 0.3, 0.65, 1])
+    clipped(cone) {
+        var g = Rng(s: 52)
+        // Old lava streaks and ridges.
+        for i in 0..<9 {
+            let x0 = w * (0.4 + CGFloat(i) * 0.025)
+            let p = CGMutablePath(); p.move(to: P(x0, 40))
+            p.addCurve(to: P(w * CGFloat(i) / 8, h), control1: P(x0 + g.r(-40, 40), h * 0.35), control2: P(w * CGFloat(i) / 8 + g.r(-60, 60), h * 0.7))
+            stroke(p, (i % 3 == 0 ? C.lava.alpha(0.55) : Col(0, 0, 0, 0.22)), i % 3 == 0 ? 5 : 3)
+        }
+        for _ in 0..<160 { fill(circle(P(g.r(0, w), g.r(30, h)), g.r(0.6, 2)), Col(0, 0, 0, 0.2)) }
+        // Warm rim light from the crater.
+        radialFill(CGPath(rect: R(0, 0, w, h), transform: nil), [C.lavaHot.alpha(0.35), C.lava.alpha(0)], P(w / 2, 30), 220)
+    }
+    stroke(cone, C.outline, 2.4)
+    // Crater mouth.
+    let mouth = ellipse(R(w * 0.38, 14, w * 0.24, 30))
+    linearFill(mouth, [C.lavaHot, C.lava, C.lavaDeep], P(0, 14), P(0, 44))
+    glow(P(w / 2, 26), 90, C.lavaHot.alpha(0.6))
+    stroke(mouth, C.outline, 2.4)
+    finish("volcano")
+}
+
+func drawTerrace() {
+    beginPt(300, 200)
+    let top = CGMutablePath()
+    top.move(to: P(0, 6)); top.addLine(to: P(300, 6)); top.addLine(to: P(300, 200)); top.addLine(to: P(0, 200)); top.closeSubpath()
+    linearFill(top, [Col(hex: 0x5C4440), Col(hex: 0x3A2C2C), Col(hex: 0x2A2022)], P(0, 6), P(0, 200), [0, 0.3, 1])
+    clipped(top) {
+        var g = Rng(s: 61)
+        for _ in 0..<120 { fill(circle(P(g.r(0, 300), g.r(10, 200)), g.r(0.6, 2.2)), Col(0, 0, 0, 0.2)) }
+        fill(R(0, 6, 300, 8), Col(hex: 0x8A6A5A, 0.7))
+    }
+    line(P(0, 6), P(300, 6), C.outline, 2)
+    finish("terrace")
+}
+
+func drawRailTrack() {
+    beginPt(200, 22)
+    for x in stride(from: CGFloat(6), to: 200, by: 18) {
+        outlined(rr(R(x, 8, 10, 13), 2), C.wood, width: 1)
+    }
+    for y in [CGFloat(6), 14] {
+        let rail = rr(R(0, y, 200, 4), 2)
+        outlinedGradient(rail, [C.ironLight, C.iron], P(0, y), P(0, y + 4), width: 0.8)
+    }
+    finish("rail_track")
+}
+
+func drawMineEntrance() {
+    beginPt(92, 86)
+    let arch = CGMutablePath()
+    arch.move(to: P(8, 86)); arch.addLine(to: P(8, 34)); arch.addQuadCurve(to: P(84, 34), control: P(46, -6)); arch.addLine(to: P(84, 86)); arch.closeSubpath()
+    outlinedGradient(arch, [C.rockLight, C.rock], P(0, 0), P(0, 86), width: 2)
+    let hole = CGMutablePath()
+    hole.move(to: P(22, 86)); hole.addLine(to: P(22, 40)); hole.addQuadCurve(to: P(70, 40), control: P(46, 12)); hole.addLine(to: P(70, 86)); hole.closeSubpath()
+    fill(hole, Col(hex: 0x0E0A0C)); glow(P(46, 70), 30, C.lavaHot.alpha(0.35))
+    for x in [CGFloat(20), 72] { outlinedGradient(rr(R(x - 5, 30, 10, 56), 2), [C.woodLight, C.woodDark], P(x - 5, 0), P(x + 5, 0), width: 1.2) }
+    outlinedGradient(rr(R(12, 24, 68, 10), 3), [C.woodLight, C.woodDark], P(0, 24), P(0, 34), width: 1.2)
+    // Water trough at the entrance.
+    let trough = rr(R(30, 64, 46, 18), 4)
+    outlinedGradient(trough, [C.woodLight, C.wood], P(0, 64), P(0, 82), width: 1.4)
+    fill(rr(R(33, 66, 40, 6), 3), Col(hex: 0x6FC6E8))
+    fill(R(36, 67, 14, 2), Col(1, 1, 1, 0.6))
+    finish("mine_entrance")
+}
+
+// MARK: - Cart, cargo, projectiles, crust, lightning, ash
+
+func drawCart() {
+    beginPt(86, 58)
+    let body = poly([P(4, 8), P(82, 8), P(72, 44), P(14, 44)])
+    outlinedGradient(body, [C.copperLight, C.copper, C.copperDark], P(0, 8), P(0, 44), width: 2)
+    fill(R(10, 12, 66, 4), C.patinaLight.alpha(0.5))
+    for y in [CGFloat(20), 34] { line(P(9, y), P(77, y), C.copperDark, 2) }
+    for x in [CGFloat(22), 43, 64] { rivet(P(x, 27), 2) }
+    outlined(rr(R(2, 4, 82, 7), 3), C.iron, width: 1.4)
+    for x in [CGFloat(24), 62] {
+        outlinedGradient(circle(P(x, 47), 10), [C.ironLight, C.iron], P(x - 10, 37), P(x + 10, 57), width: 1.8)
+        outlined(circle(P(x, 47), 3.5), C.copper, width: 1)
+    }
+    finish("cart")
+}
+
+func drawCargo() {
+    beginPt(66, 30)
+    var g = Rng(s: 71)
+    for i in 0..<16 {
+        let x = g.r(8, 58), y = g.r(10, 26) - (1 - abs(x - 33) / 33) * 10
+        let (l, m, _) = coinMetalCols(["gold", "gold", "copper", "silver"][i % 4])
+        let e = ellipse(R(x - 8, y - 3, 16, 7))
+        fill(e, m); stroke(e, C.outline, 0.9); fill(ellipse(R(x - 5, y - 2, 8, 2.5)), l)
+    }
+    glow(P(33, 14), 26, C.goldLight.alpha(0.5))
+    finish("cart_cargo")
+}
+
+func drawFrontCoins() {
+    for m in ["copper", "silver", "gold"] {
+        beginPt(40, 40)
+        let (l, mid, d) = coinMetalCols(m)
+        outlinedGradient(circle(P(20, 21), 17), [d, d.darker(0.2)], P(0, 4), P(0, 38), width: 1.6)
+        outlinedGradient(circle(P(20, 19), 17), [l, mid, d], P(8, 4), P(32, 36), width: 1.6)
+        stroke(circle(P(20, 19), 11.5), d, 1.6)
+        // Crater mark stamped on the face.
+        fill(poly([P(13, 23), P(17, 15), P(19, 17), P(21, 17), P(23, 15), P(27, 23)]), d.alpha(0.8))
+        fill(ellipse(R(11, 9, 8, 4)), Col(1, 1, 1, 0.55))
+        finish("coin_front_\(m)")
+    }
+}
+
+func drawCore() {
+    beginPt(44, 44)
+    glow(P(22, 22), 26, C.lavaHot)
+    let shape = poly([P(22, 3), P(36, 11), P(40, 26), P(30, 40), P(14, 40), P(4, 26), P(8, 11)])
+    outlinedGradient(shape, [C.lavaHot, C.lava, C.lavaDeep], P(10, 4), P(34, 40), width: 1.8)
+    fill(poly([P(22, 3), P(36, 11), P(22, 18), P(8, 11)]), Col(1, 1, 1, 0.35))
+    fill(circle(P(22, 24), 5), C.cream)
+    finish("volcanic_core")
+}
+
+func drawBomb() {
+    beginPt(44, 44)
+    let rock = rockShape(R(4, 4, 36, 36), seed: 81, points: 11, jitter: 0.1)
+    outlinedGradient(rock, [Col(hex: 0x4A3A3C), Col(hex: 0x1E1618)], P(8, 4), P(36, 40), width: 1.8)
+    clipped(rock) {
+        for (a, b) in [(P(10, 14), P(22, 24)), (P(22, 24), P(34, 16)), (P(22, 24), P(20, 38))] { line(a, b, C.lavaHot, 2.6) }
+        glow(P(22, 24), 12, C.lava)
+    }
+    finish("lava_bomb")
+}
+
+func drawBoulder() {
+    beginPt(50, 38)
+    let rock = poly([P(4, 36), P(8, 16), P(18, 6), P(32, 4), P(44, 14), P(47, 36)])
+    outlinedGradient(rock, [C.obsidianShine.mix(C.obsidian, 0.4), C.obsidian, Col(hex: 0x0B0912)], P(10, 4), P(40, 36), width: 1.8)
+    fill(poly([P(18, 6), P(32, 4), P(26, 18)]), Col(1, 1, 1, 0.25))
+    fill(poly([P(8, 16), P(18, 6), P(14, 24)]), Col(1, 1, 1, 0.12))
+    line(P(26, 18), P(30, 34), Col(1, 1, 1, 0.15), 1)
+    finish("boulder")
+}
+
+func drawLightning() {
+    beginPt(54, 300)
+    let bolt = poly([P(30, 0), P(14, 120), P(28, 120), P(10, 300), P(44, 150), P(28, 150), P(42, 0)])
+    glow(P(27, 150), 60, Col(hex: 0x9EE0FF, 0.6))
+    fill(bolt, Col(hex: 0xE8F8FF)); stroke(bolt, Col(hex: 0x6FC6E8), 2)
+    finish("lightning_bolt")
+}
+
+func drawAshCloud() {
+    beginPt(430, 300)
+    var g = Rng(s: 91)
+    for i in 0..<40 {
+        let c = P(g.r(-20, 450), g.r(20, 200) + CGFloat(i % 4) * 10)
+        fill(circle(c, g.r(30, 70)), Col(hex: 0x3A3438, g.r(0.18, 0.35)))
+    }
+    for _ in 0..<16 { fill(circle(P(g.r(0, 430), g.r(10, 160)), g.r(20, 40)), Col(hex: 0x56505A, 0.25)) }
+    finish("ash_cloud")
+}
+
+func drawPlanks() {
+    beginPt(20, 34)
+    let plank = rr(R(3, 2, 14, 30), 3)
+    outlinedGradient(plank, [C.woodLight, C.wood, C.woodDark], P(3, 0), P(17, 0), width: 1.3)
+    for y in [CGFloat(8), 26] { rivet(P(10, y), 1.6) }
+    finish("plank")
+    beginPt(20, 34)
+    let top = poly([P(3, 2), P(17, 2), P(17, 13), P(11, 17), P(3, 14)])
+    let bottom = poly([P(3, 19), P(10, 22), P(17, 18), P(17, 32), P(3, 32)])
+    for part in [top, bottom] { outlined(part, Col(hex: 0x4A3A30), width: 1.2) }
+    finish("plank_broken")
+}
+
+func drawHubCart() {
+    beginPt(200, 180)
+    glow(P(100, 90), 110, Col(hex: 0xFFB45A, 0.35))
+    // Rail section on a rock ledge.
+    let ledge = poly([P(4, 150), P(196, 150), P(184, 178), P(16, 178)])
+    outlinedGradient(ledge, [C.rockLight, C.rock], P(0, 150), P(0, 178))
+    for x in stride(from: CGFloat(10), to: 190, by: 16) { outlined(rr(R(x, 138, 9, 12), 2), C.wood, width: 1) }
+    for y in [CGFloat(136), 144] { outlinedGradient(rr(R(0, y, 200, 4), 2), [C.ironLight, C.iron], P(0, y), P(0, y + 4), width: 0.8) }
+    // Cart heaped with coins.
+    ctx.saveGState(); ctx.translateBy(x: 50, y: 66); ctx.scaleBy(x: 1.2, y: 1.2)
+    var g = Rng(s: 72)
+    for i in 0..<22 {
+        let x = g.r(10, 76), y = g.r(0, 14) + abs(x - 43) * 0.25
+        let (l, m, _) = coinMetalCols(["gold", "gold", "copper", "silver"][i % 4])
+        let e = ellipse(R(x - 8, y - 3, 16, 7)); fill(e, m); stroke(e, C.outline, 0.9); fill(ellipse(R(x - 5, y - 2, 8, 2.5)), l)
+    }
+    let body = poly([P(4, 14), P(82, 14), P(72, 50), P(14, 50)])
+    outlinedGradient(body, [C.copperLight, C.copper, C.copperDark], P(0, 14), P(0, 50), width: 2)
+    for y in [CGFloat(26), 40] { line(P(9, y), P(77, y), C.copperDark, 2) }
+    for x in [CGFloat(24), 62] {
+        outlinedGradient(circle(P(x, 53), 10), [C.ironLight, C.iron], P(x - 10, 43), P(x + 10, 63), width: 1.8)
+        outlined(circle(P(x, 53), 3.5), C.copper, width: 1)
+    }
+    ctx.restoreGState()
+    for _ in 0..<10 { glow(P(g.r(30, 170), g.r(20, 70)), g.r(2, 4), C.goldLight) }
+    finish("hub_cart")
+}
+
+// MARK: - Upgrade jars for the cart and mine
+
+func drawSlopeJars() {
+    beginPt(120, 150)
+    fill(drawJarGlass(jarRect().insetBy(dx: 4, dy: 4)), Col(1, 1, 1))
+    finish("jar_mask")
+
+    let objects: [String: () -> Void] = [
+        "wheels": {
+            outlinedGradient(circle(P(60, 98), 22), [C.ironLight, C.iron], P(38, 76), P(82, 120), width: 2)
+            for i in 0..<6 { let a = CGFloat(i) * .pi / 3; line(P(60, 98), P(60 + cos(a) * 18, 98 + sin(a) * 18), C.ironLight, 2.4) }
+            outlined(circle(P(60, 98), 6), C.copper, width: 1.2)
+            fill(ellipse(R(66, 80, 10, 5)), C.goldLight.alpha(0.8))
+        },
+        "waterTank": {
+            let tank = rr(R(38, 76, 44, 48), 10)
+            outlinedGradient(tank, [C.copperLight, C.copperDark], P(38, 0), P(82, 0), width: 1.6)
+            fill(rr(R(44, 92, 32, 26), 6), Col(hex: 0x6FC6E8))
+            fill(R(48, 95, 12, 3), Col(1, 1, 1, 0.6))
+            outlined(rr(R(52, 68, 16, 10), 3), C.iron, width: 1.2)
+        },
+        "ironPlating": {
+            let plate = poly([P(40, 74), P(80, 74), P(84, 112), P(60, 126), P(36, 112)])
+            outlinedGradient(plate, [C.ironLight, C.iron], P(40, 74), P(80, 126), width: 1.8)
+            for (x, y) in [(CGFloat(46), CGFloat(82)), (74, 82), (46, 108), (74, 108)] { rivet(P(x, y), 2.2) }
+        },
+        "railSwitch": {
+            for y in [CGFloat(110), 118] { outlinedGradient(rr(R(30, y, 60, 4), 2), [C.ironLight, C.iron], P(0, y), P(0, y + 4), width: 0.8) }
+            line(P(60, 112), P(78, 76), C.outline, 6); line(P(60, 112), P(78, 76), C.woodLight, 3.6)
+            outlined(circle(P(78, 76), 6), C.lava, width: 1.2)
+            outlined(rr(R(52, 106, 16, 10), 3), C.copper, width: 1.2)
+        },
+        "sieve": {
+            let rim = ellipse(R(32, 84, 56, 18))
+            outlinedGradient(rim, [C.woodLight, C.woodDark], P(0, 84), P(0, 102), width: 1.6)
+            let mesh = ellipse(R(36, 86, 48, 14))
+            fill(mesh, C.iron.alpha(0.7))
+            for x in stride(from: CGFloat(40), to: 82, by: 6) { line(P(x, 87), P(x, 99), C.ironLight.alpha(0.6), 0.8) }
+            for (x, y) in [(CGFloat(48), CGFloat(80)), (60, 76), (72, 80)] {
+                outlinedGradient(circle(P(x, y), 6), [C.goldLight, C.gold], P(x - 6, y - 6), P(x + 6, y + 6), width: 1)
+            }
+            for x in [CGFloat(52), 64] { fill(circle(P(x, 114), 2), C.goldLight) }
+        }
+    ]
+    for (name, draw) in objects {
+        beginPt(120, 150)
+        let glass = drawJarGlass(jarRect())
+        softShadow(glass, dy: 3, blur: 5, alpha: 0.3)
+        ctx.setBlendMode(.clear); fill(glass, Col(0, 0, 0, 1)); ctx.setBlendMode(.normal)
+        fill(glass, Col(hex: 0xBFE8E0, 0.12))
+        draw()
+        line(P(24, 76), P(24, 128), Col(1, 1, 1, 0.55), 3)
+        line(P(30, 60), P(36, 52), Col(1, 1, 1, 0.45), 2)
+        stroke(glass, C.outline, 2)
+        stroke(drawJarGlass(jarRect().insetBy(dx: 2, dy: 2)), Col(1, 1, 1, 0.25), 1)
+        let cork = rr(R(42, 12, 36, 16), 4)
+        outlinedGradient(cork, [Col(hex: 0xC99A66), Col(hex: 0x8A6038)], P(0, 12), P(0, 28))
+        line(P(44, 18), P(76, 18), Col(hex: 0x6A4426, 0.6), 1)
+        finish("jar_\(name)")
+    }
+}
+
+// MARK: - Guide illustrations
+
 func guideCanvas(_ name: String, _ draw: () -> Void) {
     beginPt(300, 200)
     let card = rr(R(0, 0, 300, 200), 16)
     clipped(card) {
-        linearFill(CGPath(rect: R(0, 0, 300, 200), transform: nil), [Col(hex: 0x3A2A30), Col(hex: 0x1C1518), Col(hex: 0x3A1A10)], P(0, 0), P(0, 200), [0, 0.6, 1])
-        glow(P(150, 230), 160, C.lava.alpha(0.35))
+        linearFill(CGPath(rect: R(0, 0, 300, 200), transform: nil), [Col(hex: 0x3A2440), Col(hex: 0x8A3E3A), Col(hex: 0x2A1E22)], P(0, 0), P(0, 200), [0, 0.45, 1])
         draw()
     }
     finish(name)
 }
 
-func sideCoin(_ x: CGFloat, _ y: CGFloat, _ m: String, w: CGFloat = 54, t: CGFloat = 12, hot: CGFloat = 0) {
-    let (l, mid, d) = coinMetalCols(m)
-    let body = rr(R(x - w / 2, y - t / 2, w, t), t * 0.42)
-    if hot > 0 { glow(P(x, y), w * 0.9, C.lavaHot.alpha(hot)) }
-    linearFill(body, [l.mix(C.lavaHot, hot), mid.mix(C.lava, hot * 0.8), d.mix(C.lava, hot * 0.5)], P(0, y - t / 2), P(0, y + t / 2))
-    stroke(body, C.outline, 1.3)
+func miniVolcano(_ glowCol: Col) {
+    let cone = poly([P(80, 120), P(130, 30), P(170, 30), P(220, 120)])
+    outlinedGradient(cone, [C.rockLight, C.rock], P(150, 30), P(150, 120))
+    let mouth = ellipse(R(130, 24, 40, 12))
+    fill(mouth, glowCol); stroke(mouth, C.outline, 1.6)
+    glow(P(150, 28), 50, glowCol.alpha(0.7))
 }
 
-func miniBeam(_ cx: CGFloat, _ y: CGFloat, tilt: CGFloat = 0, width: CGFloat = 200) {
-    ctx.saveGState(); ctx.translateBy(x: cx, y: y); ctx.rotate(by: tilt)
-    let b = rr(R(-width / 2, -6, width, 12), 4)
-    outlinedGradient(b, [C.rockLight, C.rockMid], P(0, -6), P(0, 6))
-    for x in [-width / 2 + 8, 0, width / 2 - 8] { outlined(rr(R(x - 5, -8, 10, 16), 2), C.copper, width: 1.1) }
-    ctx.restoreGState()
-    outlinedGradient(poly([P(cx, y + 6), P(cx + 22, y + 46), P(cx - 22, y + 46)]), [C.rockLight, C.rock], P(cx, y), P(cx, y + 46))
+func miniRail(_ y: CGFloat, from x0: CGFloat = 20, to x1: CGFloat = 280) {
+    fill(R(x0, y, x1 - x0, 40), Col(hex: 0x3A2C2C))
+    line(P(x0, y), P(x1, y), C.outline, 1.6)
+    for x in stride(from: x0 + 4, to: x1, by: 12) { fill(R(x, y - 5, 6, 6), C.wood) }
+    line(P(x0, y - 5), P(x1, y - 5), C.ironLight, 2)
 }
 
-func miniClaw(_ x: CGFloat, _ y: CGFloat) {
-    line(P(x, 0), P(x, y - 10), C.outline, 3.6); line(P(x, 0), P(x, y - 10), C.ironLight, 1.8)
-    outlinedGradient(rr(R(x - 16, y - 12, 32, 14), 4), [C.copperLight, C.copperDark], P(0, y - 12), P(0, y + 2), width: 1.3)
-    for side in [CGFloat(-1), 1] {
-        let p = CGMutablePath(); p.move(to: P(x + side * 8, y)); p.addQuadCurve(to: P(x + side * 26, y + 22), control: P(x + side * 26, y + 2))
-        stroke(p, C.outline, 5); stroke(p, C.iron, 3)
+func miniCart(_ x: CGFloat, _ y: CGFloat, cargo: Bool = false, hot: CGFloat = 0) {
+    if hot > 0 { glow(P(x, y - 12), 40, C.lava.alpha(hot)) }
+    if cargo { for i in 0..<5 { fill(ellipse(R(x - 16 + CGFloat(i) * 6, y - 30 + CGFloat(i % 2) * 3, 10, 5)), C.gold) } }
+    outlinedGradient(poly([P(x - 22, y - 26), P(x + 22, y - 26), P(x + 16, y - 6), P(x - 16, y - 6)]), [C.copperLight, C.copperDark], P(0, y - 26), P(0, y - 6), width: 1.4)
+    for dx in [CGFloat(-10), 10] { outlined(circle(P(x + dx, y - 4), 5), C.iron, width: 1.2) }
+}
+
+func miniCoin(_ c: CGPoint, _ r: CGFloat = 7) {
+    outlinedGradient(circle(c, r), [C.goldLight, C.gold], P(c.x - r, c.y - r), P(c.x + r, c.y + r), width: 1.2)
+}
+
+func miniBomb(_ c: CGPoint, _ r: CGFloat = 9) {
+    outlined(circle(c, r), Col(hex: 0x2A2022), width: 1.4)
+    line(P(c.x - r * 0.5, c.y - r * 0.2), P(c.x + r * 0.4, c.y + r * 0.3), C.lavaHot, 1.6)
+    glow(c, r * 1.6, C.lava.alpha(0.6))
+}
+
+func drawSlopeGuides() {
+    guideCanvas("guide_volley") {
+        miniVolcano(C.goldLight)
+        miniRail(160)
+        for (x, a) in [(CGFloat(90), CGFloat(0.7)), (150, 0.45), (230, 0.6)] { fill(ellipse(R(x - 18, 152, 36, 8)), Col(0, 0, 0, a)) }
+        miniCoin(P(110, 80)); miniCoin(P(190, 70)); miniBomb(P(150, 100))
+        fill(ellipse(R(132, 152, 36, 8)), Col(hex: 0x6A0A00, 0.8))
+        miniCart(90, 160)
     }
-}
-
-func arrowDown(_ x: CGFloat, _ y0: CGFloat, _ y1: CGFloat, _ c: Col) {
-    line(P(x, y0), P(x, y1 - 8), c, 3)
-    fill(poly([P(x - 7, y1 - 10), P(x + 7, y1 - 10), P(x, y1)]), c)
-}
-
-func drawGuides() {
-    guideCanvas("guide_drop") {
-        miniBeam(150, 152)
-        sideCoin(120, 140, "copper"); sideCoin(124, 128, "silver", w: 46)
-        miniClaw(176, 44)
-        sideCoin(176, 74, "gold", w: 42, hot: 0.5)
-        arrowDown(176, 86, 112, C.goldLight)
-        // Finger drag hint.
-        let finger = rr(R(220, 30, 26, 40), 13)
-        outlined(finger, C.paper, width: 1.4)
-        line(P(200, 50), P(214, 50), C.patinaLight, 2.4); fill(poly([P(198, 44), P(198, 56), P(190, 50)]), C.patinaLight)
+    guideCanvas("guide_cargo") {
+        miniRail(150)
+        miniCart(180, 150, cargo: true, hot: 0.7)
+        // Mine entrance on the left with a water trough.
+        let arch = CGMutablePath(); arch.move(to: P(20, 150)); arch.addLine(to: P(20, 96)); arch.addQuadCurve(to: P(80, 96), control: P(50, 66)); arch.addLine(to: P(80, 150)); arch.closeSubpath()
+        outlined(arch, C.rockMid, width: 1.6)
+        fill(rr(R(34, 104, 32, 46), 4), Col(hex: 0x0E0A0C))
+        fill(rr(R(34, 132, 40, 10), 3), Col(hex: 0x6FC6E8))
+        line(P(150, 120), P(96, 120), C.patinaLight, 3); fill(poly([P(96, 113), P(96, 127), P(86, 120)]), C.patinaLight)
+        // Heat gauge.
+        let tube = rr(R(254, 40, 14, 100), 7)
+        fill(tube, Col(0, 0, 0, 0.5)); fill(rr(R(256, 64, 10, 74), 5), C.lava); stroke(tube, C.paper, 1.4)
+        label("HEAT", P(261, 152), size: 11, color: C.paper)
     }
-    guideCanvas("guide_weld") {
-        miniBeam(150, 156)
-        sideCoin(150, 144, "copper", w: 64)
-        sideCoin(150, 131, "copper", w: 60, hot: 0.85)
-        for i in 0..<10 {
-            let a = CGFloat(i) / 10 * .pi * 2
-            line(P(150 + cos(a) * 34, 136 + sin(a) * 14), P(150 + cos(a) * 46, 136 + sin(a) * 20), C.lavaHot, 2)
+    guideCanvas("guide_crust") {
+        miniRail(150)
+        miniCart(90, 150)
+        let boulder = poly([P(160, 150), P(164, 128), P(176, 118), P(192, 118), P(204, 132), P(206, 150)])
+        outlinedGradient(boulder, [C.obsidianShine, C.obsidian], P(160, 118), P(206, 150))
+        for i in 0..<8 {
+            let a = CGFloat(i) / 8 * .pi * 2
+            line(P(183 + cos(a) * 30, 132 + sin(a) * 22), P(183 + cos(a) * 40, 132 + sin(a) * 30), C.goldLight, 2)
         }
-        // Heat bar with the weld band.
-        let track = rr(R(60, 40, 180, 16), 8)
-        fill(track, Col(0, 0, 0, 0.5)); stroke(track, C.paper.alpha(0.7), 1.2)
-        fill(rr(R(168, 42, 70, 12), 6), C.goldLight.alpha(0.45))
-        fill(rr(R(62, 44, 150, 8), 4), C.lavaHot)
-        label("WELD", P(203, 72), size: 14, color: C.goldLight)
+        line(P(116, 130), P(150, 130), C.goldLight, 3); fill(poly([P(150, 123), P(150, 137), P(160, 130)]), C.goldLight)
+        label("DASH", P(130, 112), size: 13, color: C.goldLight)
     }
-    guideCanvas("guide_mint") {
-        miniBeam(80, 160, width: 120)
-        sideCoin(80, 148, "gold", w: 44); sideCoin(80, 136, "gold", w: 44); sideCoin(80, 124, "gold", w: 44)
-        line(P(124, 120), P(176, 120), C.goldLight, 3); fill(poly([P(176, 112), P(176, 128), P(190, 120)]), C.goldLight)
-        miniBeam(236, 160, width: 120)
-        let ingot = poly([P(206, 138), P(266, 138), P(274, 154), P(198, 154)])
-        glow(P(236, 146), 50, C.goldLight.alpha(0.6))
-        outlinedGradient(ingot, [C.goldLight, C.gold, C.goldDark], P(0, 138), P(0, 154))
-        label("x3", P(80, 96), size: 18, color: C.goldLight, outline: C.outline, outlineWidth: 3)
+    guideCanvas("guide_rails") {
+        miniVolcano(C.lava)
+        miniRail(118, from: 40, to: 260)
+        miniRail(170)
+        miniCart(110, 170)
+        line(P(110, 150), P(110, 126), C.patinaLight, 3); fill(poly([P(103, 128), P(117, 128), P(110, 118)]), C.patinaLight)
+        outlinedGradient(poly([P(200, 112), P(208, 98), P(216, 112)]), [C.lavaHot, C.lava], P(200, 98), P(216, 112))
+        miniCoin(P(170, 100), 6); miniBomb(P(236, 94), 7)
+        miniCoin(P(200, 154), 6)
     }
-    guideCanvas("guide_fulcrum") {
-        miniBeam(150, 140, tilt: 0.16)
-        sideCoin(206, 136, "obsidian", w: 50, t: 14)
-        sideCoin(210, 122, "copper", w: 48)
-        // Dial.
-        let c = P(70, 70)
-        let face = CGMutablePath(); face.addArc(center: c, radius: 40, startAngle: .pi, endAngle: 0, clockwise: false); face.closeSubpath()
-        outlined(face, C.paper, width: 1.6)
-        let zone = CGMutablePath(); zone.addArc(center: c, radius: 34, startAngle: -.pi / 2 - 0.25, endAngle: -.pi / 2 + 0.25, clockwise: false)
-        stroke(zone, C.patina, 6)
-        line(c, P(c.x + cos(-.pi / 2 + 0.7) * 34, c.y + sin(-.pi / 2 + 0.7) * 34), C.lava, 2.6)
-        fill(circle(c, 4), C.copperDark)
-    }
-    guideCanvas("guide_lava") {
-        // Lava rising in notches with a coin sinking.
-        let lavaTop: CGFloat = 130
-        let p = CGMutablePath(); p.move(to: P(0, lavaTop)); p.addQuadCurve(to: P(300, lavaTop), control: P(150, lavaTop - 12)); p.addLine(to: P(300, 200)); p.addLine(to: P(0, 200)); p.closeSubpath()
-        linearFill(p, [C.lavaHot, C.lava, C.lavaDeep], P(0, lavaTop - 6), P(0, 200))
-        miniBeam(150, 96, width: 170)
-        sideCoin(236, 132, "silver", w: 40)
-        for i in 0..<5 {
-            let y = 180 - CGFloat(i) * 16
-            line(P(16, y), P(34, y), C.paper, 2)
-        }
-        line(P(40, 176), P(40, 132), C.lavaHot, 3); fill(poly([P(33, 134), P(47, 134), P(40, 122)]), C.lavaHot)
+    guideCanvas("guide_ash") {
+        for i in 0..<12 { fill(circle(P(20 + CGFloat(i) * 26, 40 + CGFloat(i % 3) * 8), 34), Col(hex: 0x2E282C, 0.7)) }
+        miniRail(160)
+        let bolt = poly([P(160, 40), P(146, 100), P(158, 100), P(144, 156), P(172, 92), P(160, 92), P(170, 40)])
+        glow(P(158, 110), 40, Col(hex: 0x9EE0FF, 0.6))
+        fill(bolt, Col(hex: 0xE8F8FF)); stroke(bolt, Col(hex: 0x6FC6E8), 1.4)
+        fill(ellipse(R(130, 152, 56, 10)), Col(hex: 0x9EE0FF, 0.6))
+        miniCart(158, 160, cargo: true)
+        fill(ellipse(R(60, 152, 36, 8)), Col(0, 0, 0, 0.25))
     }
 }
 
 // MARK: - Run everything
 
-drawCoinSide("copper", w: 86, t: 17)
-drawCoinSide("silver", w: 72, t: 16)
-drawCoinSide("gold", w: 58, t: 15)
-drawCoinSide("obsidian", w: 96, t: 21)
-for m in ["copper", "silver", "gold"] { drawIngot(m) }
-drawBeam(); drawFulcrum(); drawClaw(); drawChain(); drawLavaCrust(); drawGlow()
-drawShaft(); drawVault(); drawPaper(); drawSlate(); drawCoreRock()
-drawLogo(); drawHubBalance(); drawShelfItem(); drawLanternsItem(); drawCoreItem(); drawBoardItem(); drawValveItem(); drawLiftItem()
-drawKeepers(); drawJars()
+drawGlow()
+drawSky(); drawVolcano(); drawTerrace(); drawRailTrack(); drawMineEntrance()
+drawCart(); drawCargo(); drawFrontCoins(); drawCore(); drawBomb(); drawBoulder(); drawLightning(); drawAshCloud(); drawPlanks()
+drawVault(); drawPaper(); drawSlate(); drawCoreRock()
+drawLogo(); drawHubCart(); drawShelfItem(); drawLanternsItem(); drawCoreItem(); drawBoardItem(); drawValveItem(); drawLiftItem()
+drawKeepers(); drawSlopeJars()
 drawGoldIcon(); drawPlate(); drawMedallion(); drawPlaque(); drawShelfPlank(); drawLanternFrame(); drawTag()
-drawDial(); drawThermo(); drawRuler(); drawMineCart(); drawCrystals(); drawGuides()
+drawThermo(); drawMineCart(); drawCrystals(); drawSlopeGuides()
 print("done")

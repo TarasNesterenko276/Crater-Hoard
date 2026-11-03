@@ -11,9 +11,9 @@ struct ProfileStoreTests {
         return (try ProfileStore(container: container), container)
     }
 
-    private func summary(gold: Int = 120, height: Int = 90, score: Int? = nil, mints: Int = 1) -> RunSummary {
-        RunSummary(score: score ?? gold + height, gold: gold, heightCentimetres: height, coinsLanded: 12, mints: mints,
-                   welds: 3, spills: 4, bestMultiplier: 1.75, duration: 80, keeperID: Keeper.pip.rawValue)
+    private func summary(gold: Int = 120, bestBank: Int = 60, seconds: Double = 80) -> RunSummary {
+        RunSummary(score: gold + Int(seconds) * 2, gold: gold, duration: seconds, coinsCaught: 12, coresCaught: 1, banks: 3,
+                   bestBank: bestBank, bouldersBroken: 2, lightningCaught: 1, volleys: 20, keeperID: Keeper.pip.rawValue)
     }
 
     @Test func freshProfileStartsEmptyWithTheStarterKeeper() throws {
@@ -27,32 +27,32 @@ struct ProfileStoreTests {
     @Test func purchasingAnUpgradeSpendsGoldAndRaisesTheLevel() throws {
         let (store, _) = try makeStore()
         try store.grantGold(500)
-        let cost = try #require(store.nextCost(of: .bellows))
-        try store.purchaseUpgrade(.bellows)
-        #expect(store.level(of: .bellows) == 1)
+        let cost = try #require(store.nextCost(of: .wheels))
+        try store.purchaseUpgrade(.wheels)
+        #expect(store.level(of: .wheels) == 1)
         #expect(store.gold == 500 - cost)
-        #expect(store.loadout.bellows == 1)
+        #expect(store.loadout.wheels == 1)
     }
 
     @Test func purchaseIsRefusedWithoutEnoughGold() throws {
         let (store, _) = try makeStore()
         try store.grantGold(10)
         #expect(throws: ProfileError.insufficientGold(needed: 50)) {
-            try store.purchaseUpgrade(.bellows)
+            try store.purchaseUpgrade(.wheels)
         }
         #expect(store.gold == 10)
-        #expect(store.level(of: .bellows) == 0)
+        #expect(store.level(of: .wheels) == 0)
     }
 
     @Test func maxedUpgradesCannotBeBought() throws {
         let (store, _) = try makeStore()
         try store.grantGold(100_000)
-        for _ in 0..<UpgradeKind.spiritLevel.maxLevel { try store.purchaseUpgrade(.spiritLevel) }
-        #expect(store.nextCost(of: .spiritLevel) == nil)
-        #expect(throws: ProfileError.upgradeMaxed) { try store.purchaseUpgrade(.spiritLevel) }
+        for _ in 0..<UpgradeKind.railSwitch.maxLevel { try store.purchaseUpgrade(.railSwitch) }
+        #expect(store.nextCost(of: .railSwitch) == nil)
+        #expect(throws: ProfileError.upgradeMaxed) { try store.purchaseUpgrade(.railSwitch) }
     }
 
-    @Test func hiringAKeeperSendsThemToTheClaw() throws {
+    @Test func hiringAKeeperPutsThemInTheCart() throws {
         let (store, _) = try makeStore()
         try store.grantGold(Keeper.cinder.price)
         try store.hireKeeper(.cinder)
@@ -72,15 +72,16 @@ struct ProfileStoreTests {
 
     @Test func recordingAShiftBanksGoldAndUpdatesRecords() throws {
         let (store, _) = try makeStore()
-        let first = store.recordRun(summary(gold: 100, height: 80))
-        #expect(first.isNewBestScore && first.isNewBestHeight)
+        let first = store.recordRun(summary(gold: 100, bestBank: 80))
+        #expect(first.isNewBestScore && first.isNewBestBank)
         #expect(first.totalGold == 100)
-        let second = store.recordRun(summary(gold: 20, height: 40))
-        #expect(!second.isNewBestScore && !second.isNewBestHeight)
-        #expect(second.previousBestHeight == 80)
+        let second = store.recordRun(summary(gold: 20, bestBank: 40, seconds: 30))
+        #expect(!second.isNewBestScore && !second.isNewBestBank)
+        #expect(second.previousBestBank == 80)
         #expect(store.profile.totalRuns == 2)
-        #expect(store.profile.totalMints == 2)
-        #expect(store.profile.bestHeight == 80)
+        #expect(store.profile.totalCores == 2)
+        #expect(store.profile.bestBank == 80)
+        #expect(store.profile.longestShift == 80)
         #expect(store.recentRuns.count == 2)
         #expect(store.recentRuns.first?.gold == 20, "Newest shift first")
     }
@@ -89,12 +90,12 @@ struct ProfileStoreTests {
         let (store, container) = try makeStore()
         try store.grantGold(Keeper.cinder.price + 200)
         try store.hireKeeper(.cinder)
-        try store.purchaseUpgrade(.bellows)
+        try store.purchaseUpgrade(.wheels)
         store.recordRun(summary())
 
         let reopened = try ProfileStore(container: container)
         #expect(reopened.loadout.keeper == .cinder)
-        #expect(reopened.level(of: .bellows) == 1)
+        #expect(reopened.level(of: .wheels) == 1)
         #expect(reopened.recentRuns.count == 1)
         #expect(reopened.gold == store.gold)
     }
@@ -111,12 +112,12 @@ struct ProfileStoreTests {
     @Test func resetEmptiesTheVault() throws {
         let (store, _) = try makeStore()
         try store.grantGold(5_000)
-        try store.purchaseUpgrade(.lavaSink)
+        try store.purchaseUpgrade(.ironPlating)
         try store.hireKeeper(.basalt)
         store.recordRun(summary())
         try store.resetProgress()
         #expect(store.gold == 0)
-        #expect(store.level(of: .lavaSink) == 0)
+        #expect(store.level(of: .ironPlating) == 0)
         #expect(store.loadout.keeper == .pip)
         #expect(store.recentRuns.isEmpty)
         #expect(store.profile.totalRuns == 0)
@@ -125,9 +126,9 @@ struct ProfileStoreTests {
     @Test func achievementsGrowFromRecordedShifts() throws {
         let (store, _) = try makeStore()
         #expect(store.achievements.allSatisfy { !$0.isUnlocked })
-        store.recordRun(summary(gold: 50, height: 120, mints: 1))
+        store.recordRun(summary(gold: 150, bestBank: 120, seconds: 130))
         let unlocked = Set(store.achievements.filter(\.isUnlocked).map(\.id))
-        #expect(unlocked.isSuperset(of: ["firstShift", "height100", "firstMint"]))
-        #expect(!unlocked.contains("height250"))
+        #expect(unlocked.isSuperset(of: ["firstShift", "bank100", "shift120"]))
+        #expect(!unlocked.contains("bank300"))
     }
 }
